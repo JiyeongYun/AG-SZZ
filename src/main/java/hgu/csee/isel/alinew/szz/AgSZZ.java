@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Iterator;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -22,7 +23,7 @@ import hgu.csee.isel.alinew.szz.model.RevsInPath;
 import hgu.csee.isel.alinew.szz.model.PathRevision;
 
 public class AgSZZ {
-	private final String GIT_DIR = "/Users/yoon/git/BugPatchCollector";
+	private final String GIT_DIR = "/Users/yoon/git/DataForSZZ";
 	//private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
 	
 	private static Git git;
@@ -42,7 +43,6 @@ public class AgSZZ {
 			
 			// TODO make RevsInPath
 			RevsInPath revsInPath = configureRevsInPath(repo, commits);
-			
 
 			
 		} catch (IOException e) {
@@ -56,7 +56,6 @@ public class AgSZZ {
 		List<PathRevision> paths = new ArrayList<>();
 		
 		for(RevCommit commit : commits) {
-//			List<String> paths = new ArrayList<>();
 			RevTree tree = commit.getTree();
 			
 			TreeWalk treeWalk = new TreeWalk(repo);
@@ -67,7 +66,6 @@ public class AgSZZ {
 			//TEST
 //			System.out.println("\nRev : " + commit.getName() + "\n");
 			
-			
 			while(treeWalk.next()) {
 				String path = treeWalk.getPathString();
 				
@@ -77,21 +75,31 @@ public class AgSZZ {
 				paths.add(new PathRevision(path, commit));			
 			}
 			
-			for(PathRevision pr : paths) {
-				if(revsInPath.containsKey(pr.getPath())) {
-					List<RevCommit> lst = revsInPath.get(pr.getPath());
-					lst.add(pr.getCommit());
-					revsInPath.replace(pr.getPath(), lst);
-				}else{
-					List<RevCommit> lst = new ArrayList<>();
-					lst.add(pr.getCommit());
-					revsInPath.put(pr.getPath(), lst);
-				}
-			}
-			
-			
-			
 		}
+		
+		for(PathRevision pr : paths) {
+			if(revsInPath.containsKey(pr.getPath())) {
+				List<RevCommit> lst = revsInPath.get(pr.getPath());
+				lst.add(pr.getCommit());
+				revsInPath.replace(pr.getPath(), lst);
+			}else{
+				List<RevCommit> lst = new ArrayList<>();
+				lst.add(pr.getCommit());
+				revsInPath.put(pr.getPath(), lst);
+			}
+		}
+		
+		//TEST
+//		Iterator<String> keys = revsInPath.keySet().iterator();
+//		while( keys.hasNext() ){
+//			String key = keys.next();
+//			System.out.println("\tkey : " + key);
+//			List<RevCommit> lst = revsInPath.get(key);
+//			for(RevCommit rc : lst) {
+//				String sha1 = rc.getName();
+//				System.out.println( String.format("val : %s\n", sha1 ));
+//			}
+//		}
 		
 		return revsInPath;
 	}
