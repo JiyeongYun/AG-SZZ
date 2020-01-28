@@ -19,13 +19,15 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 
 import hgu.csee.isel.alinew.szz.model.RevsInPath;
+import hgu.csee.isel.alinew.szz.model.PathRevision;
 
 public class AgSZZ {
-	private final String GIT_DIR = "/Users/kimseokjin/git/PLOP2";
+	private final String GIT_DIR = "/Users/yoon/git/BugPatchCollector";
 	//private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
 	
 	private static Git git;
 	private Repository repo;
+	
 	
 	public static void main(String[] args) {
 		new AgSZZ().run();	
@@ -51,9 +53,10 @@ public class AgSZZ {
 	
 	private RevsInPath configureRevsInPath(Repository repo, List<RevCommit> commits) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
 		RevsInPath revsInPath = new RevsInPath();
+		List<PathRevision> paths = new ArrayList<>();
 		
 		for(RevCommit commit : commits) {
-			List<String> paths = new ArrayList<>();
+//			List<String> paths = new ArrayList<>();
 			RevTree tree = commit.getTree();
 			
 			TreeWalk treeWalk = new TreeWalk(repo);
@@ -62,21 +65,32 @@ public class AgSZZ {
 			treeWalk.setFilter(PathSuffixFilter.create(".java"));
 			
 			//TEST
-			System.out.println("\nRev : " + commit.getName() + "\n");
+//			System.out.println("\nRev : " + commit.getName() + "\n");
+			
 			
 			while(treeWalk.next()) {
 				String path = treeWalk.getPathString();
 				
 				//TEST
-				System.out.println("found: " + path);
+//				System.out.println("found: " + path);
 				
-				paths.add(path);
-				
-				
-				
+				paths.add(new PathRevision(path, commit));			
 			}
 			
-			//put
+			for(PathRevision pr : paths) {
+				if(revsInPath.containsKey(pr.getPath())) {
+					List<RevCommit> lst = revsInPath.get(pr.getPath());
+					lst.add(pr.getCommit());
+					revsInPath.replace(pr.getPath(), lst);
+				}else{
+					List<RevCommit> lst = new ArrayList<>();
+					lst.add(pr.getCommit());
+					revsInPath.put(pr.getPath(), lst);
+				}
+			}
+			
+			
+			
 		}
 		
 		return revsInPath;
