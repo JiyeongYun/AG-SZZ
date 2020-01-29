@@ -28,6 +28,7 @@ public class AgSZZ {
 	
 	private static Git git;
 	private Repository repo;
+	private List<PathRevision> paths = new ArrayList<>();
 	
 	
 	public static void main(String[] args) {
@@ -42,8 +43,9 @@ public class AgSZZ {
 			List<RevCommit> commits = getCommits(git);
 			
 			// TODO make RevsInPath
+			paths = configurePathRevisionList(repo, commits);
 			RevsInPath revsInPath = configureRevsInPath(repo, commits);
-
+			
 			
 		} catch (IOException e) {
 			
@@ -51,10 +53,7 @@ public class AgSZZ {
 		}
 	}
 	
-	private RevsInPath configureRevsInPath(Repository repo, List<RevCommit> commits) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
-		RevsInPath revsInPath = new RevsInPath();
-		List<PathRevision> paths = new ArrayList<>();
-		
+	private List<PathRevision> configurePathRevisionList(Repository repo, List<RevCommit> commits) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException{
 		for(RevCommit commit : commits) {
 			RevTree tree = commit.getTree();
 			
@@ -74,8 +73,14 @@ public class AgSZZ {
 				
 				paths.add(new PathRevision(path, commit));			
 			}
-			
+		
 		}
+		
+		return paths;
+	}
+	
+	private RevsInPath configureRevsInPath(Repository repo, List<RevCommit> commits) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
+		RevsInPath revsInPath = new RevsInPath();
 		
 		for(PathRevision pr : paths) {
 			if(revsInPath.containsKey(pr.getPath())) {
@@ -90,19 +95,28 @@ public class AgSZZ {
 		}
 		
 		//TEST
-//		Iterator<String> keys = revsInPath.keySet().iterator();
-//		while( keys.hasNext() ){
-//			String key = keys.next();
-//			System.out.println("\tkey : " + key);
-//			List<RevCommit> lst = revsInPath.get(key);
-//			for(RevCommit rc : lst) {
-//				String sha1 = rc.getName();
-//				System.out.println( String.format("val : %s\n", sha1 ));
-//			}
-//		}
+		Iterator<String> keys = revsInPath.keySet().iterator();
+		while( keys.hasNext() ){
+			String key = keys.next();
+			System.out.println("\tkey : " + key);
+			List<RevCommit> lst = revsInPath.get(key);
+			for(RevCommit rc : lst) {
+				if(rc.getParent(0) == null) break;
+				
+				RevCommit parent = rc.getParent(0);
+				
+				
+				String sha1 = rc.getName();
+				System.out.println( String.format("val : %s\n", sha1 ));
+			}
+		}
+		
+		
+		
 		
 		return revsInPath;
 	}
+	
 	
 	private List<RevCommit> getCommits(Git git) {
 		List<RevCommit> commits = new ArrayList<>();
