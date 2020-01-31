@@ -8,10 +8,10 @@ public enum LineType {
 	
 	public String toString() {
 		switch(this) {
-			case INSERT: return "insert";
-			case DELETE: return "delete";
-			case REPLACE: return "replace";
-			case CONTEXT: return "context";
+			case INSERT: return "INSERT";
+			case DELETE: return "DELETE";
+			case REPLACE: return "REPLACE";
+			case CONTEXT: return "CONTEXT";
 			default: throw new IllegalArgumentException();
 		}
 	}

@@ -38,6 +38,7 @@ import hgu.csee.isel.alinew.szz.model.PathRevision;
 
 public class AgSZZ {
 	private final String GIT_DIR = "/Users/yoon/git/DataForSZZ";
+//	private final String GIT_DIR = "/Users/yoon/git/BugPatchCollector";
 	//private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
 	
 	private static Git git;
