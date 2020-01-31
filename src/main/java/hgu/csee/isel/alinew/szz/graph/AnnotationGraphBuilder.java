@@ -171,21 +171,16 @@ public class AnnotationGraphBuilder {
 							idx++;
 							continue;
 						}
-//						System.out.println("hunk idx: "+hunkIdx);
-						Hunk hunk = hunkList.get(hunkIdx);
 						
+						Hunk hunk = hunkList.get(hunkIdx);
 						int begin = hunk.getBeginB();
 						int end = hunk.getEndB();
 						
 						if(idx <hunk.getBeginB()) {
 							// 해당 hunk의 beginB보다 작을 때까지
 							// context
+							System.out.println("여기는 context입니다.");
 							Line ancestor = parentLineList.get(idx + offset);
-							
-							if(line.getAncestors().size() == 0) {
-								line.setAncestors(new ArrayList<Line>());
-							}
-							
 							List<Line> ancestors = line.getAncestors();
 							ancestors.add(ancestor);
 							line.setAncestors(ancestors);
@@ -197,46 +192,46 @@ public class AnnotationGraphBuilder {
 							
 							switch(hunkType) {
 								case "INSERT" :
+									System.out.println("여기는 insert입니다.");
 									line.setLineType(LineType.INSERT);
 									offset--;
 									break;
-								case "DELETE" :
-									line.setLineType(LineType.DELETE);
-									offset++;
-									break;
 								case "REPLACE" :
+									System.out.println("여기는 replace입니다.");
 									line.setLineType(LineType.REPLACE);
 									
 									List<Line> ancestors = parentLineList.subList(hunk.getBeginA(), hunk.getEndA());
 									line.setAncestors(ancestors);
 									
-									// setting
-//									for(int i = hunk.getBeginA(); i < hunk.getRangeA(); i++) {
-//										Line ancestor = parentLineList.get(offset + i);
-//										
-//										if(line.getAncestors().size() == 0) {
-//											line.setAncestors(new ArrayList<>());
-//										}
-//										
-//										List<Line> ancestors = line.getAncestors();
-//										ancestors.add(ancestor);
-//										line.setAncestors(ancestors);
-//									}
-									
 									//offset이 중복으로 더해지는 걸 방지  
-									if(idx == hunk.getRangeB()) {
+									if(idx == hunk.getEndB()-1) {
 										offset += hunk.getRangeA()-hunk.getRangeB();	
-										hunkIdx++;
+										
 									}
-									
-//									idx += hunk.getRangeA();
 									break;
 								default : 
 									System.err.println("ERROR");
 							
 							}
-						
+							if(idx == end-1) {
+								hunkIdx++;
+							}
 							
+							
+						} else if(begin == end && hunk.getDiffType().equalsIgnoreCase("delete")) {
+//							if( childLineList.size() <= begin) {
+//								break;
+//							}
+							
+							System.out.println("여기는 delete입니다.");
+							offset++;
+							
+							Line ancestor = parentLineList.get(idx + offset);
+							List<Line> ancestors = line.getAncestors();
+							ancestors.add(ancestor);
+							line.setAncestors(ancestors);
+							
+							hunkIdx++;
 						}
 						
 						idx++;
