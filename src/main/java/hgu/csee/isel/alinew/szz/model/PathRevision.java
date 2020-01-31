@@ -6,6 +6,10 @@ public class PathRevision {
 	private String path;
 	private RevCommit commit;
 	
+	public PathRevision() {
+
+	}
+	
 	public PathRevision(String path, RevCommit commit) {
 		super();
 		this.path = path;

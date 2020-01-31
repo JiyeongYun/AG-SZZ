@@ -45,6 +45,10 @@ public class AnnotationGraphBuilder {
 	}
 	
 	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
+		AnnotationGraphModel agm = new AnnotationGraphModel();
+		PathRevision childPathRev = new PathRevision();
+		PathRevision parentPathRev = new PathRevision();
+		
 		// configure the list of path and revision 
 		List<PathRevision> pathRevList = configurePathRevisionList(repo, commits);
 		
@@ -59,21 +63,27 @@ public class AnnotationGraphBuilder {
 			
 			List<RevCommit> revs = revsWithPath.get(path);
 			
+			LinkedList<Line> parentLineList = new LinkedList<>();
+			LinkedList<Line> childLineList = new LinkedList<>();
+			
 			//traverse all revs that has path
 			for(RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
 				if(revs.indexOf(childRev) == revs.size()-1) break;
-				
+			
 				RevCommit parentRev = revs.get(revs.indexOf(childRev)+1);
 
 				// get parentFileSource and childFileSource
 				String parentContent = Utils.fetchBlob(repo, parentRev, path);
 				String childContent = Utils.fetchBlob(repo, childRev, path);
 				
-				// get the line list from content
-				LinkedList<Line> parentLineList = configureLineList(path, parentRev, parentContent);
-				LinkedList<Line> childLineList = configureLineList(path, childRev, childContent);
-			
+				// get the parent line list from content
+				configureLineList(parentLineList, path, parentRev, parentContent);
+				// get the child line list only when initial iteration
+				if(revs.indexOf(childRev) == 0) {
+					configureLineList(childLineList, path, parentRev, parentContent);
+				}
+				
 				EditList editList = Utils.getEditListFromDiff(parentContent, childContent);
 					
 				// configure the list of hunk from edit list
@@ -184,24 +194,41 @@ public class AnnotationGraphBuilder {
 					 */
 					
 					//TEST
-//					for(Line line : childLineList) {
-//						System.out.println("path: "+line.getPath());
-//						System.out.println("rev: "+line.getRev());
-//						System.out.println("lineType: "+line.getLineType());
-//						System.out.println("현재 line idx: "+line.getIdx());
-//						List<Line> lineList = new ArrayList<>();
-//						lineList = line.getAncestors();
-//						
-//						for(Line l : lineList) {
-//							System.out.println("parent idx: "+l.getIdx());
-//						}
-//						
-//						System.out.println("\n\n	");
-//					}
+					for(Line line : childLineList) {
+						System.out.println("path: "+line.getPath());
+						System.out.println("rev: "+line.getRev());
+						System.out.println("lineType: "+line.getLineType());
+						System.out.println("현재 line idx: "+line.getIdx());
+						List<Line> lineList = new ArrayList<>();
+						lineList = line.getAncestors();
+						
+						for(Line l : lineList) {
+							System.out.println("parent idx: "+l.getIdx());
+						}
+						
+						System.out.println("\n\n	");
+					}
+				
+				
+				// set childPathRev and parentPathRev
+				childPathRev.setCommit(childRev);
+				childPathRev.setPath(path);
+				parentPathRev.setCommit(parentRev);
+				parentPathRev.setPath(path);
+				
+				// put subgraph into graph(i.e. AnnotationGraphModel)
+				agm.put(childPathRev, childLineList);
+				agm.put(parentPathRev, parentLineList);
+				
+				// update child to parent and generate new parent
+				childPathRev = parentPathRev;
+				parentPathRev = new PathRevision();
+				childLineList = parentLineList;
+				parentLineList = new LinkedList<Line>();
 			}
 		}
 		
-		return null;
+		return agm;
 	}
 	
 	private List<PathRevision> configurePathRevisionList(Repository repo, List<RevCommit> commits) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
@@ -243,9 +270,7 @@ public class AnnotationGraphBuilder {
 		return revsInPath;
 	}
 	
-	private LinkedList<Line> configureLineList(String path, RevCommit rev, String content){
-		LinkedList<Line> lineList = new LinkedList<>();
-		
+	private void configureLineList(LinkedList<Line> lst, String path, RevCommit rev, String content){
 		String[] lineContentArr = content.split("\n");
 		
 		for(int i = 0; i < lineContentArr.length; i++) {
@@ -255,9 +280,9 @@ public class AnnotationGraphBuilder {
 			List<Line> ancestors = new LinkedList<>();
 			Line line = new Line(path, rev.getName(), content, i, ancestors); 
 			 
-			lineList.add(line);
+			lst.add(line);
 		}
-		return lineList;
+		
 	}
 	
 	private ArrayList<Hunk> configureHunkList(EditList editList){
