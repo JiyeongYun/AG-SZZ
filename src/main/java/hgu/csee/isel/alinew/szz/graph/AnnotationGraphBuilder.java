@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.errors.CorruptObjectException;
@@ -17,9 +15,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
-import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import hgu.csee.isel.alinew.szz.model.Hunk;
 import hgu.csee.isel.alinew.szz.model.Line;
@@ -31,8 +27,8 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 public class AnnotationGraphBuilder {
 	private Repository repo;
 	private List<RevCommit> commits;
-	private PathRevision childPathRev;
-	private PathRevision parentPathRev;
+//	private PathRevision childPathRev;
+//	private PathRevision parentPathRev;
 
 	public AnnotationGraphBuilder(Repository repo, List<RevCommit> commits) {
 		super();
@@ -49,143 +45,85 @@ public class AnnotationGraphBuilder {
 	}
 	
 	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
-		List<PathRevision> paths = configurePathRevisionList(repo, commits);
-		RevsWithPath revsWithPath = configureRevsWithPath(paths);
+		// configure the list of path and revision 
+		List<PathRevision> pathRevList = configurePathRevisionList(repo, commits);
 		
-		Iterator<String> keys = revsWithPath.keySet().iterator();
-		while( keys.hasNext() ){
-			String path = keys.next();
-//			System.out.println("\tkey : " + key);
-			List<RevCommit> lst = revsWithPath.get(path);
-			for(RevCommit child : lst) {
-				if(lst.indexOf(child) == lst.size()-1) break;
+		// collect all revisions that has specific path
+		RevsWithPath revsWithPath = collectRevsWithSpecificPath(pathRevList);
+		
+		// traverse all paths in the repo
+		Iterator<String> paths = revsWithPath.keySet().iterator();
+		
+		while(paths.hasNext()){
+			String path = paths.next();
+			
+			List<RevCommit> revs = revsWithPath.get(path);
+			
+			//traverse all revs that has path
+			for(RevCommit childRev : revs) {
+				// Escape from the loop when there is no parent rev anymore
+				if(revs.indexOf(childRev) == revs.size()-1) break;
 				
-				RevCommit parent = lst.get(lst.indexOf(child)+1);
+				RevCommit parentRev = revs.get(revs.indexOf(childRev)+1);
+
+				// get parentFileSource and childFileSource
+				String parentContent = Utils.fetchBlob(repo, parentRev, path);
+				String childContent = Utils.fetchBlob(repo, childRev, path);
 				
-				childPathRev = new PathRevision(path, child);
-				parentPathRev = new PathRevision(path, parent);
+				// get the line list from content
+				LinkedList<Line> parentLineList = configureLineList(path, parentRev, parentContent);
+				LinkedList<Line> childLineList = configureLineList(path, childRev, childContent);
+			
+				EditList editList = Utils.getEditListFromDiff(parentContent, childContent);
+					
+				// configure the list of hunk from edit list
+				ArrayList<Hunk> hunkList = configureHunkList(editList);
+
+				/*
+				 * Start code
+				 *  
+				 */
+				int childIdx = 0;
+				int hunkIdx = 0;
+				int parentIdx = 0;
+				int offset = 0;
+					
+				// search each line
+				while(childIdx < childLineList.size()) {
 						
-				// Diff
-				DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
-				df.setRepository(repo);
-				df.setPathFilter(PathFilter.create(path));
-				List<DiffEntry> diffs = df.scan(parent.getTree(), child.getTree());
-				
-				
-				for(DiffEntry diff : diffs) {
-
-					// get preFixSource and fixSource without comments
-					String parentFileSource = Utils.fetchBlob(repo, parent, path);
-					String childFileSource = Utils.fetchBlob(repo, child, path);
-					
-					System.out.println("prev: "+parentFileSource);
-					System.out.println("current: "+childFileSource);
-					
-					String[] parentContentList = parentFileSource.split("\n");
-					String[] childContentList = childFileSource.split("\n");
-					
-					LinkedList<Line> parentLineList = new LinkedList<>();
-					LinkedList<Line> childLineList = new LinkedList<>();
-					
-					for(int i = 0; i < parentContentList.length; i++) {
-						String content = parentContentList[i];
-						List<Line> ancestors = new ArrayList<>();
-						Line line = new Line(path, child.getName(), content, i, ancestors);
-						parentLineList.add(line);
-					}
-					
-					for(int i = 0; i < childContentList.length; i++) {
-						String content = childContentList[i];
-						List<Line> ancestors = new ArrayList<>();
-						Line line = new Line(path, child.getName(), content, i, ancestors);
-						childLineList.add(line);
-					}
-					
-					// TEST
-//					System.out.println("=======================================parent========================================");					
-//					
-//					System.out.println("line path: " + parentLineList.get(0).getPath());
-//					System.out.println("line rev: " + parentLineList.get(0).getRev());
-//					
-//					for(Line line: parentLineList) {
-//						System.out.println("line idx: " + line.getIdx());
-//						System.out.println("line content: " + line.getContent());						
-//					}
-//					
-//					
-//					System.out.println("=======================================child========================================");
-//					
-//					System.out.println("line path: " + childLineList.get(0).getPath());
-//					System.out.println("line rev: " + childLineList.get(0).getRev());
-//					
-//					for(Line line: childLineList) {
-//						System.out.println("line idx: " + line.getIdx());
-//						System.out.println("line content: " + line.getContent());						
-//					}
-//					
-//					
-//					System.out.println("=======================================done========================================");
-					
-					// get line indices that are related to BI lines.
-					EditList editList = Utils.getEditListFromDiff(parentFileSource, childFileSource);
-					ArrayList<Hunk> hunkList = new ArrayList<>();
-					for (Edit edit : editList) {
-
-						int beginA = edit.getBeginA();
-						int endA = edit.getEndA();
-						int beginB = edit.getBeginB();
-						int endB = edit.getEndB();
-
-						Hunk hunk = new Hunk(edit.getType().toString(), beginA, endA, beginB, endB);
-						hunkList.add(hunk);
+					Line childLine = childLineList.get(childIdx);
 						
-						// TEST
-						System.out.println("Type : " + hunk.getDiffType());
-						System.out.println("beginA : " + hunk.getBeginA());
-						System.out.println("endA : " + hunk.getEndA());
-						System.out.println("beginB : " + hunk.getBeginB());
-						System.out.println("endB : " + hunk.getEndB());
-//						System.out.println("rangeA : " + hunk.getRangeA());
-//						System.out.println("rangeA : " + hunk.getRangeB());
-						System.out.println("");
-
-					}
-
-					int idx = 0, hunkIdx = 0, offset = 0;
-					
-					// search each line
-					while(idx < childLineList.size()) {
-						
-						Line line = childLineList.get(idx);
-						
-						if( hunkList.size() <= hunkIdx) {
-							Line ancestor = parentLineList.get(idx + offset);
+					// when there is no hunk anymore
+					if( hunkList.size() <= hunkIdx) {
+						//Line ancestor = parentLineList.get(parentIdx);
+						Line ancestor = parentLineList.get(childIdx + offset);
 							
-							if(line.getAncestors().size() == 0) {
-								line.setAncestors(new ArrayList<Line>());
-							}
-							
-							List<Line> ancestors = line.getAncestors();
-							ancestors.add(ancestor);
-							line.setAncestors(ancestors);
-							idx++;
-							continue;
+						if(childLine.getAncestors().size() == 0) {
+							childLine.setAncestors(new ArrayList<Line>());
 						}
+							
+						List<Line> ancestors = childLine.getAncestors();
+						ancestors.add(ancestor);
+						childLine.setAncestors(ancestors);
+						childIdx++;
+						
+						continue;
+					}
 						
 						Hunk hunk = hunkList.get(hunkIdx);
-						int begin = hunk.getBeginB();
-						int end = hunk.getEndB();
+						int beginOfChild = hunk.getBeginOfChild();
+						int endOfChild = hunk.getEndOfChild();
 						
-						if(idx <hunk.getBeginB()) {
+						if(childIdx <hunk.getBeginOfChild()) {
 							// 해당 hunk의 beginB보다 작을 때까지
 							// context
 							System.out.println("여기는 context입니다.");
-							Line ancestor = parentLineList.get(idx + offset);
-							List<Line> ancestors = line.getAncestors();
+							Line ancestor = parentLineList.get(childIdx + offset);
+							List<Line> ancestors = childLine.getAncestors();
 							ancestors.add(ancestor);
-							line.setAncestors(ancestors);
+							childLine.setAncestors(ancestors);
 							
-						} else if(begin <= idx && idx < end) {
+						} else if(beginOfChild <= childIdx && childIdx < endOfChild) {
 							//해당 hunk범위
 							// insert, delete, replace
 							String hunkType = hunk.getDiffType();
@@ -193,67 +131,73 @@ public class AnnotationGraphBuilder {
 							switch(hunkType) {
 								case "INSERT" :
 									System.out.println("여기는 insert입니다.");
-									line.setLineType(LineType.INSERT);
+									childLine.setLineType(LineType.INSERT);
 									offset--;
 									break;
 								case "REPLACE" :
 									System.out.println("여기는 replace입니다.");
-									line.setLineType(LineType.REPLACE);
+									childLine.setLineType(LineType.REPLACE);
 									
-									List<Line> ancestors = parentLineList.subList(hunk.getBeginA(), hunk.getEndA());
-									line.setAncestors(ancestors);
+									List<Line> ancestors = parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent());
+
+									childLine.setAncestors(ancestors);
 									
 									//offset이 중복으로 더해지는 걸 방지  
-									if(idx == hunk.getEndB()-1) {
-										offset += hunk.getRangeA()-hunk.getRangeB();	
-										
+									if(childIdx == hunk.getEndOfChild() - 1) {
+										offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
 									}
 									break;
 								default : 
 									System.err.println("ERROR");
 							
 							}
-							if(idx == end-1) {
+							
+							if(childIdx == endOfChild-1) {
 								hunkIdx++;
 							}
 							
 							
-						} else if(begin == end && hunk.getDiffType().equalsIgnoreCase("delete")) {
+						} else if(beginOfChild == endOfChild && hunk.getDiffType().equalsIgnoreCase("delete")) {
 //							if( childLineList.size() <= begin) {
 //								break;
 //							}
 							
 							System.out.println("여기는 delete입니다.");
-							offset++;
+							offset += hunk.getRangeOfParent();
 							
-							Line ancestor = parentLineList.get(idx + offset);
-							List<Line> ancestors = line.getAncestors();
+							Line ancestor = parentLineList.get(childIdx + offset);
+							List<Line> ancestors = childLine.getAncestors();
 							ancestors.add(ancestor);
-							line.setAncestors(ancestors);
+							childLine.setAncestors(ancestors);
 							
 							hunkIdx++;
 						}
 						
-						idx++;
+						childIdx++;
 					}// while done
 					
-					for(Line line : childLineList) {
-						System.out.println("path: "+line.getPath());
-						System.out.println("rev: "+line.getRev());
-						System.out.println("lineType: "+line.getLineType());
-						System.out.println("현재 line idx: "+line.getIdx());
-						List<Line> lineList = new ArrayList<>();
-						lineList = line.getAncestors();
-						
-						for(Line l : lineList) {
-							System.out.println("parent idx: "+l.getIdx());
-						}
-						
-						System.out.println("\n\n	");
-					}
+					/**
+					 * 
+					 * End
+					 * 
+					 * 
+					 */
 					
-					
-				}
+					//TEST
+//					for(Line line : childLineList) {
+//						System.out.println("path: "+line.getPath());
+//						System.out.println("rev: "+line.getRev());
+//						System.out.println("lineType: "+line.getLineType());
+//						System.out.println("현재 line idx: "+line.getIdx());
+//						List<Line> lineList = new ArrayList<>();
+//						lineList = line.getAncestors();
+//						
+//						for(Line l : lineList) {
+//							System.out.println("parent idx: "+l.getIdx());
+//						}
+//						
+//						System.out.println("\n\n	");
+//					}
 			}
 		}
 		
@@ -281,7 +225,7 @@ public class AnnotationGraphBuilder {
 		return paths;
 	}
 	
-	private RevsWithPath configureRevsWithPath(List<PathRevision> paths) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
+	private RevsWithPath collectRevsWithSpecificPath(List<PathRevision> paths) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
 		RevsWithPath revsInPath = new RevsWithPath();
 		
 		for(PathRevision pr : paths) {
@@ -298,5 +242,37 @@ public class AnnotationGraphBuilder {
 		
 		return revsInPath;
 	}
-
+	
+	private LinkedList<Line> configureLineList(String path, RevCommit rev, String content){
+		LinkedList<Line> lineList = new LinkedList<>();
+		
+		String[] lineContentArr = content.split("\n");
+		
+		for(int i = 0; i < lineContentArr.length; i++) {
+			String lineContent = lineContentArr[i];
+		
+			// make new Line
+			List<Line> ancestors = new LinkedList<>();
+			Line line = new Line(path, rev.getName(), content, i, ancestors); 
+			 
+			lineList.add(line);
+		}
+		return lineList;
+	}
+	
+	private ArrayList<Hunk> configureHunkList(EditList editList){
+		ArrayList<Hunk> hunkList = new ArrayList<>();
+		
+		for (Edit edit : editList) {
+			Hunk hunk = new Hunk(edit.getType().toString(), 
+									edit.getBeginA(), 
+									edit.getEndA(), 
+									edit.getBeginB(), 
+									edit.getEndB());
+			
+			hunkList.add(hunk);
+		}
+		
+		return hunkList;
+	}
 }
