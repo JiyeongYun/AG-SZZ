@@ -2,7 +2,6 @@ package hgu.csee.isel.alinew.szz;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
@@ -13,7 +12,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import hgu.csee.isel.alinew.szz.exception.UnknownHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
-import hgu.csee.isel.alinew.szz.model.PathRevision;
 import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AgSZZ {
@@ -48,8 +46,6 @@ public class AgSZZ {
 //				
 //				cnt++;
 //			}
-				
-			
 			
 			// TODO Phase 2 : Trace and collect BIC candidates
 			// TODO Phase 3 : Filter out format changes, comments, etc among BIC candidates

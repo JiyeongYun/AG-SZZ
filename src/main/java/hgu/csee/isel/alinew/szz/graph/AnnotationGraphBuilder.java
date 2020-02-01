@@ -49,10 +49,9 @@ public class AnnotationGraphBuilder {
 		PathRevision childPathRev = new PathRevision();
 		PathRevision parentPathRev = new PathRevision();
 		
-		List<Line> ancestorsOfChild;
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
-		Line childLine, ancestor;
+		Line childLine;
 		Hunk hunk;
 		String hunkType;
 		
@@ -216,6 +215,8 @@ public class AnnotationGraphBuilder {
 				
 				paths.add(new PathRevision(path, commit));			
 			}
+			
+			treeWalk.close();
 		}
 		
 		return paths;
@@ -247,7 +248,7 @@ public class AnnotationGraphBuilder {
 		
 			// make new Line
 			List<Line> ancestors = new ArrayList<>();
-			Line line = new Line(path, rev.getName(), content, i, ancestors); 
+			Line line = new Line(path, rev.getName(), lineContent, i, ancestors); 
 			 
 			lst.add(line);
 		}
