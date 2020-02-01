@@ -17,6 +17,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 
+import hgu.csee.isel.alinew.szz.exception.UnknownHunkTypeException;
 import hgu.csee.isel.alinew.szz.model.Hunk;
 import hgu.csee.isel.alinew.szz.model.Line;
 import hgu.csee.isel.alinew.szz.model.LineType;
@@ -27,8 +28,6 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 public class AnnotationGraphBuilder {
 	private Repository repo;
 	private List<RevCommit> commits;
-//	private PathRevision childPathRev;
-//	private PathRevision parentPathRev;
 
 	public AnnotationGraphBuilder(Repository repo, List<RevCommit> commits) {
 		super();
@@ -44,15 +43,21 @@ public class AnnotationGraphBuilder {
 		this.repo = repo;
 	}
 	
-	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
+	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException, UnknownHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
+		
 		PathRevision childPathRev = new PathRevision();
 		PathRevision parentPathRev = new PathRevision();
 		
-		// configure the list of path and revision 
+		List<Line> ancestorsOfChild;
+		int childIdx, hunkIdx, offset;
+		int beginOfChild, endOfChild;
+		Line childLine, ancestor;
+		Hunk hunk;
+		String hunkType;
+		
 		List<PathRevision> pathRevList = configurePathRevisionList(repo, commits);
 		
-		// collect all revisions that has specific path
 		RevsWithPath revsWithPath = collectRevsWithSpecificPath(pathRevList);
 		
 		// traverse all paths in the repo
@@ -66,149 +71,113 @@ public class AnnotationGraphBuilder {
 			LinkedList<Line> parentLineList = new LinkedList<>();
 			LinkedList<Line> childLineList = new LinkedList<>();
 			
-			//traverse all revs that has path
 			for(RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
 				if(revs.indexOf(childRev) == revs.size()-1) break;
 			
 				RevCommit parentRev = revs.get(revs.indexOf(childRev)+1);
 
-				// get parentFileSource and childFileSource
 				String parentContent = Utils.fetchBlob(repo, parentRev, path);
 				String childContent = Utils.fetchBlob(repo, childRev, path);
 				
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
 				// get the child line list only when initial iteration
-				if(revs.indexOf(childRev) == 0) {
+				if(revs.indexOf(childRev) == 0) 
 					configureLineList(childLineList, path, parentRev, parentContent);
-				}
 				
-				EditList editList = Utils.getEditListFromDiff(parentContent, childContent);
-					
-				// configure the list of hunk from edit list
-				ArrayList<Hunk> hunkList = configureHunkList(editList);
-
-				/*
-				 * Start code
-				 *  
-				 */
-				int childIdx = 0;
-				int hunkIdx = 0;
-				int parentIdx = 0;
-				int offset = 0;
-					
-				// search each line
+				ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
+				
+				// map child line with its ancestor(s)
+				childIdx = 0;
+				hunkIdx = 0;
+				offset = 0;
+				
 				while(childIdx < childLineList.size()) {
 						
-					Line childLine = childLineList.get(childIdx);
+					childLine = childLineList.get(childIdx);
 						
-					// when there is no hunk anymore
-					if( hunkList.size() <= hunkIdx) {
-						//Line ancestor = parentLineList.get(parentIdx);
-						Line ancestor = parentLineList.get(childIdx + offset);
-							
-						if(childLine.getAncestors().size() == 0) {
-							childLine.setAncestors(new ArrayList<Line>());
-						}
-							
-						List<Line> ancestors = childLine.getAncestors();
-						ancestors.add(ancestor);
-						childLine.setAncestors(ancestors);
+					// Case 1 - when there is no hunk anymore
+					if(hunkList.size() <= hunkIdx) {
+						
+						childLine.setLineType(LineType.CONTEXT);
+						mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
+						
 						childIdx++;
-						
 						continue;
 					}
 						
-						Hunk hunk = hunkList.get(hunkIdx);
-						int beginOfChild = hunk.getBeginOfChild();
-						int endOfChild = hunk.getEndOfChild();
-						
-						if(childIdx <hunk.getBeginOfChild()) {
-							// 해당 hunk의 beginB보다 작을 때까지
-							// context
-							System.out.println("여기는 context입니다.");
-							Line ancestor = parentLineList.get(childIdx + offset);
-							List<Line> ancestors = childLine.getAncestors();
-							ancestors.add(ancestor);
-							childLine.setAncestors(ancestors);
-							
-						} else if(beginOfChild <= childIdx && childIdx < endOfChild) {
-							//해당 hunk범위
-							// insert, delete, replace
-							String hunkType = hunk.getDiffType();
-							
-							switch(hunkType) {
-								case "INSERT" :
-									System.out.println("여기는 insert입니다.");
-									childLine.setLineType(LineType.INSERT);
-									offset--;
-									break;
-								case "REPLACE" :
-									System.out.println("여기는 replace입니다.");
-									childLine.setLineType(LineType.REPLACE);
-									
-									List<Line> ancestors = parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent());
-
-									childLine.setAncestors(ancestors);
-									
-									//offset이 중복으로 더해지는 걸 방지  
-									if(childIdx == hunk.getEndOfChild() - 1) {
-										offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
-									}
-									break;
-								default : 
-									System.err.println("ERROR");
-							
-							}
-							
-							if(childIdx == endOfChild-1) {
-								hunkIdx++;
-							}
-							
-							
-						} else if(beginOfChild == endOfChild && hunk.getDiffType().equalsIgnoreCase("delete")) {
-//							if( childLineList.size() <= begin) {
-//								break;
-//							}
-							
-							System.out.println("여기는 delete입니다.");
-							offset += hunk.getRangeOfParent();
-							
-							Line ancestor = parentLineList.get(childIdx + offset);
-							List<Line> ancestors = childLine.getAncestors();
-							ancestors.add(ancestor);
-							childLine.setAncestors(ancestors);
-							
-							hunkIdx++;
-						}
-						
-						childIdx++;
-					}// while done
+					hunk = hunkList.get(hunkIdx);
+					beginOfChild = hunk.getBeginOfChild();
+					endOfChild = hunk.getEndOfChild();
+					hunkType = hunk.getHunkType();
 					
-					/**
-					 * 
-					 * End
-					 * 
-					 * 
-					 */
-					
-					//TEST
-					for(Line line : childLineList) {
-						System.out.println("path: "+line.getPath());
-						System.out.println("rev: "+line.getRev());
-						System.out.println("lineType: "+line.getLineType());
-						System.out.println("현재 line idx: "+line.getIdx());
-						List<Line> lineList = new ArrayList<>();
-						lineList = line.getAncestors();
+					// Case 2 - child index is out of hunk range 
+					if(childIdx < beginOfChild) {
 						
-						for(Line l : lineList) {
-							System.out.println("parent idx: "+l.getIdx());
-						}
+						childLine.setLineType(LineType.CONTEXT);
+						mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
 						
-						System.out.println("\n\n	");
 					}
-				
+					// Case 3 - child index is in hunk range
+					else {  
+						switch(hunkType) {
+							case "INSERT" :
+								// When childIdx is the last index in hunk, increment hunk index
+								if(childIdx == endOfChild - 1) 
+									hunkIdx ++;
+					
+								childLine.setLineType(LineType.INSERT);
+								
+								offset--;
+								
+								break;
+								
+							case "REPLACE" :
+								// When childIdx is the last index in hunk, update offset and increment hunk index
+								if(childIdx == endOfChild - 1) {
+									offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
+									hunkIdx++;
+								}
+									
+								childLine.setLineType(LineType.REPLACE);
+								mapChildLineWithAncestors(hunk, parentLineList, childLine);
+								
+								break;
+								
+							case "DELETE" :	
+								offset += hunk.getRangeOfParent();
+								
+								childLine.setLineType(LineType.CONTEXT);
+								mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
+								
+								hunkIdx++;
+								
+								break;
+								
+							default : 
+								throw new UnknownHunkTypeException();
+						}
+					}
+					
+					childIdx++;
+				}
+					
+				//TEST
+//				for(Line line : childLineList) {
+//					System.out.println("path: "+line.getPath());
+//					System.out.println("rev: "+line.getRev());
+//					System.out.println("lineType: "+line.getLineType());
+//					System.out.println("현재 line idx: "+line.getIdx());
+//					List<Line> lineList = new ArrayList<>();
+//					lineList = line.getAncestors();
+//						
+//					for(Line l : lineList) {
+//						System.out.println("parent idx: "+l.getIdx());
+//					}
+//
+//					System.out.println("\n\n	");
+//				}
 				
 				// set childPathRev and parentPathRev
 				childPathRev.setCommit(childRev);
@@ -230,7 +199,7 @@ public class AnnotationGraphBuilder {
 		
 		return agm;
 	}
-	
+
 	private List<PathRevision> configurePathRevisionList(Repository repo, List<RevCommit> commits) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
 		List<PathRevision> paths = new ArrayList<>();
 		
@@ -277,7 +246,7 @@ public class AnnotationGraphBuilder {
 			String lineContent = lineContentArr[i];
 		
 			// make new Line
-			List<Line> ancestors = new LinkedList<>();
+			List<Line> ancestors = new ArrayList<>();
 			Line line = new Line(path, rev.getName(), content, i, ancestors); 
 			 
 			lst.add(line);
@@ -299,5 +268,20 @@ public class AnnotationGraphBuilder {
 		}
 		
 		return hunkList;
+	}
+	
+	private void mapChildLineWithAncestor(int childIdx, int offset, List<Line> parentLineList, Line childLine) {
+		Line ancestor;
+		List<Line> ancestorsOfChild;
+		
+		ancestor = parentLineList.get(childIdx + offset);
+		ancestorsOfChild = childLine.getAncestors();
+		ancestorsOfChild.add(ancestor);
+		childLine.setAncestors(ancestorsOfChild);
+	}
+	
+	private void mapChildLineWithAncestors(Hunk hunk, List<Line> parentLineList, Line childLine) {
+		List<Line> ancestorsOfChild = parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent());
+		childLine.setAncestors(ancestorsOfChild);
 	}
 }

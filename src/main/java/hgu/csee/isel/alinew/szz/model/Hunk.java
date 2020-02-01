@@ -1,23 +1,23 @@
 package hgu.csee.isel.alinew.szz.model;
 
 public class Hunk {
-	private String diffType;
+	private String hunkType;
 	private int beginOfParent;
 	private int endOfParent;
 	private int beginOfChild;
 	private int endOfChild;
 
-	public Hunk(String diffType, int beginA, int endA, int beginB, int endB) {
+	public Hunk(String hunkType, int beginA, int endA, int beginB, int endB) {
 		super();
-		this.diffType = diffType;
+		this.hunkType = hunkType;
 		this.beginOfParent = beginA;
 		this.endOfParent = endA;
 		this.beginOfChild = beginB;
 		this.endOfChild = endB;
 	}
 	
-	public String getDiffType() {
-		return diffType;
+	public String getHunkType() {
+		return hunkType;
 	}
 
 	public int getBeginOfParent() {

@@ -10,6 +10,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import hgu.csee.isel.alinew.szz.exception.UnknownHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
 import hgu.csee.isel.alinew.szz.model.PathRevision;
@@ -53,9 +54,9 @@ public class AgSZZ {
 			// TODO Phase 2 : Trace and collect BIC candidates
 			// TODO Phase 3 : Filter out format changes, comments, etc among BIC candidates
 			
-		} catch (IOException | GitAPIException e) {
+		} catch (IOException | GitAPIException | UnknownHunkTypeException e) {
 			
 			e.printStackTrace();
-		}
+		} 
 	}
 }
