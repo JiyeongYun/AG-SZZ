@@ -1,27 +1,27 @@
 package hgu.csee.isel.alinew.szz.exception;
 
-public class UnknownHunkTypeException extends Exception {
+public class EmptyHunkTypeException extends Exception {
 
-	public UnknownHunkTypeException() {
+	public EmptyHunkTypeException() {
 		this("ERROR - Unknown Hunk Type");
 	}
 
-	public UnknownHunkTypeException(String message) {
+	public EmptyHunkTypeException(String message) {
 		super(message);
 		// TODO Auto-generated constructor stub
 	}
 
-	public UnknownHunkTypeException(Throwable cause) {
+	public EmptyHunkTypeException(Throwable cause) {
 		super(cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public UnknownHunkTypeException(String message, Throwable cause) {
+	public EmptyHunkTypeException(String message, Throwable cause) {
 		super(message, cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public UnknownHunkTypeException(String message, Throwable cause, boolean enableSuppression,
+	public EmptyHunkTypeException(String message, Throwable cause, boolean enableSuppression,
 			boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 		// TODO Auto-generated constructor stub

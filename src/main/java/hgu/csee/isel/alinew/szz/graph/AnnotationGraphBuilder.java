@@ -3,7 +3,6 @@ package hgu.csee.isel.alinew.szz.graph;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.jgit.diff.Edit;
@@ -17,7 +16,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 
-import hgu.csee.isel.alinew.szz.exception.UnknownHunkTypeException;
+import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.model.Hunk;
 import hgu.csee.isel.alinew.szz.model.Line;
 import hgu.csee.isel.alinew.szz.model.LineType;
@@ -35,15 +34,7 @@ public class AnnotationGraphBuilder {
 		this.commits = commits;
 	}
 
-	public Repository getRepo() {
-		return repo;
-	}
-
-	public void setRepo(Repository repo) {
-		this.repo = repo;
-	}
-	
-	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException, UnknownHunkTypeException {
+	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException, EmptyHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
 		
 		PathRevision childPathRev = new PathRevision();
@@ -67,8 +58,8 @@ public class AnnotationGraphBuilder {
 			
 			List<RevCommit> revs = revsWithPath.get(path);
 			
-			LinkedList<Line> parentLineList = new LinkedList<>();
-			LinkedList<Line> childLineList = new LinkedList<>();
+			ArrayList<Line> parentLineList = new ArrayList<>();
+			ArrayList<Line> childLineList = new ArrayList<>();
 			
 			for(RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
@@ -155,7 +146,7 @@ public class AnnotationGraphBuilder {
 								break;
 								
 							default : 
-								throw new UnknownHunkTypeException();
+								throw new EmptyHunkTypeException();
 						}
 					}
 					
@@ -192,7 +183,7 @@ public class AnnotationGraphBuilder {
 				childPathRev = parentPathRev;
 				parentPathRev = new PathRevision();
 				childLineList = parentLineList;
-				parentLineList = new LinkedList<Line>();
+				parentLineList = new ArrayList<Line>();
 			}
 		}
 		
@@ -240,7 +231,7 @@ public class AnnotationGraphBuilder {
 		return revsInPath;
 	}
 	
-	private void configureLineList(LinkedList<Line> lst, String path, RevCommit rev, String content){
+	private void configureLineList(ArrayList<Line> lst, String path, RevCommit rev, String content){
 		String[] lineContentArr = content.split("\n");
 		
 		for(int i = 0; i < lineContentArr.length; i++) {
