@@ -3,9 +3,10 @@ package hgu.csee.isel.alinew.szz.graph;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import hgu.csee.isel.alinew.szz.model.Line;
-import hgu.csee.isel.alinew.szz.model.PathRevision;
+import org.eclipse.jgit.revwalk.RevCommit;
 
-public class AnnotationGraphModel extends HashMap<PathRevision, ArrayList<Line>>{
+import hgu.csee.isel.alinew.szz.model.Line;
+
+public class AnnotationGraphModel extends HashMap<RevCommit, HashMap<String,ArrayList<Line>>>{
 
 }

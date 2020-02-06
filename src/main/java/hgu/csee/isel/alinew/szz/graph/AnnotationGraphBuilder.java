@@ -2,6 +2,7 @@ package hgu.csee.isel.alinew.szz.graph;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,8 +38,8 @@ public class AnnotationGraphBuilder {
 	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException, EmptyHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
 		
-		PathRevision childPathRev = new PathRevision();
-		PathRevision parentPathRev = new PathRevision();
+		HashMap<String, ArrayList<Line>> childPathWithLines = new HashMap<>();
+		HashMap<String, ArrayList<Line>> parentPathWithLines = new HashMap<>();
 		
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
@@ -169,22 +170,21 @@ public class AnnotationGraphBuilder {
 //					System.out.println("\n\n	");
 //				}
 				
-				// set childPathRev and parentPathRev
-				childPathRev.setCommit(childRev);
-				childPathRev.setPath(path);
-				parentPathRev.setCommit(parentRev);
-				parentPathRev.setPath(path);
+				//make HashMap<path, childLineList> and HashMap<path, parentList> 
+				childPathWithLines.put(path, childLineList);
+				parentPathWithLines.put(path, parentLineList);
 				
 				// put subgraph into graph(i.e. AnnotationGraphModel)
-				agm.put(childPathRev, childLineList);
-				agm.put(parentPathRev, parentLineList);
-				
-				// update child to parent and generate new parent
-				childPathRev = parentPathRev;
-				parentPathRev = new PathRevision();
+				agm.put(childRev, childPathWithLines);
+				agm.put(parentRev, parentPathWithLines);
+			
 				childLineList = parentLineList;
 				parentLineList = new ArrayList<Line>();
 			}
+			
+			// Clear HashMap<path, childLineList> and HashMap<path, parentList> 
+			childPathWithLines.clear();
+			parentPathWithLines.clear();
 		}
 		
 		return agm;
