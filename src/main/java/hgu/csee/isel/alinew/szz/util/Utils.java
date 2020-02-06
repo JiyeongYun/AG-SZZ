@@ -21,7 +21,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 public class Utils {
 	
 	public static DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.MYERS);
-	public static RawTextComparator diffComparator = RawTextComparator.WS_IGNORE_ALL;
+	public static RawTextComparator diffComparator = RawTextComparator.DEFAULT;
 	
 	public static EditList getEditListFromDiff(String file1, String file2) {
 		RawText rt1 = new RawText(file1.getBytes());
