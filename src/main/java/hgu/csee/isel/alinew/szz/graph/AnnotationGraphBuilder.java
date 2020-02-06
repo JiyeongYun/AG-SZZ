@@ -182,9 +182,9 @@ public class AnnotationGraphBuilder {
 				parentLineList = new ArrayList<Line>();
 			}
 			
-			// Clear HashMap<path, childLineList> and HashMap<path, parentList> 
-			childPathWithLines.clear();
-			parentPathWithLines.clear();
+			// Clear HashMap<path, childLineList> and HashMap<path, parentList> (CONSIDERABLE CODE)
+//			childPathWithLines.clear();
+//			parentPathWithLines.clear();
 		}
 		
 		return agm;

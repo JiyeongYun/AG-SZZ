@@ -2,6 +2,9 @@ package hgu.csee.isel.alinew.szz;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
@@ -12,6 +15,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
+import hgu.csee.isel.alinew.szz.model.Line;
 import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AgSZZ {
@@ -36,15 +40,32 @@ public class AgSZZ {
 			AnnotationGraphBuilder agb = new AnnotationGraphBuilder(repo, commits);
 			AnnotationGraphModel agm = agb.buildAnnotationGraph();
 			
-			//TEST
-//			Iterator<PathRevision> pathRevisions = agm.keySet().iterator();
-//			int cnt = 0;
-//			while(pathRevisions.hasNext()) {
+			
+//			Iterator<HashMap<String, ArrayList<Line>>> iter = agm.values().iterator();
+//			
+//			int revCnt = 1;
+//			while(iter.hasNext()) {
+//				HashMap<String, ArrayList<Line>> map = iter.next();
+//				Iterator<ArrayList<Line>> iter2 = map.values().iterator();
+//			
+//				while(iter2.hasNext()) {
+//					ArrayList<Line> lines = iter2.next();
+//					
+//					for(Line l : lines) {
+//						System.out.println("\tpath : " + l.getPath());
+//						System.out.println("\trev : " + l.getRev());
+//						
+//						System.out.println("content : " + l.getContent());
+//						System.out.println("index : " + l.getIdx());
+//						System.out.println("path : " + l.getPath());
+//						System.out.println("rev : " + l.getRev());
+//						System.out.println("type : " + l.getLineType());
+//					}
+//
+//				}
 //				
-//				System.out.println("iter : " + cnt);
-//				System.out.println("key : " + pathRevisions.next().getCommit().getName());
-//				
-//				cnt++;
+//				System.out.println("\nRev Count : " + revCnt + "\n");
+//				revCnt++;
 //			}
 			
 			// TODO Phase 2 : Trace and collect BIC candidates
