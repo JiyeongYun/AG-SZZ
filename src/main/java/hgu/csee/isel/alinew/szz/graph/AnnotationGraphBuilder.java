@@ -38,8 +38,8 @@ public class AnnotationGraphBuilder {
 	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException, EmptyHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
 		
-		HashMap<String, ArrayList<Line>> childPathWithLines = new HashMap<>();
-		HashMap<String, ArrayList<Line>> parentPathWithLines = new HashMap<>();
+		HashMap<String, ArrayList<Line>> childPathWithLines; 
+		HashMap<String, ArrayList<Line>> parentPathWithLines;
 		
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
@@ -65,6 +65,9 @@ public class AnnotationGraphBuilder {
 			for(RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
 				if(revs.indexOf(childRev) == revs.size()-1) break;
+				
+				childPathWithLines = new HashMap<String, ArrayList<Line>>();
+				parentPathWithLines = new HashMap<String, ArrayList<Line>>();
 			
 				RevCommit parentRev = revs.get(revs.indexOf(childRev)+1);
 
@@ -75,7 +78,7 @@ public class AnnotationGraphBuilder {
 				configureLineList(parentLineList, path, parentRev, parentContent);
 				// get the child line list only when initial iteration
 				if(revs.indexOf(childRev) == 0) 
-					configureLineList(childLineList, path, parentRev, parentContent);
+					configureLineList(childLineList, path, childRev, childContent);
 				
 				ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
 				
@@ -159,13 +162,13 @@ public class AnnotationGraphBuilder {
 //					System.out.println("path: "+line.getPath());
 //					System.out.println("rev: "+line.getRev());
 //					System.out.println("lineType: "+line.getLineType());
-//					System.out.println("현재 line idx: "+line.getIdx());
-//					List<Line> lineList = new ArrayList<>();
-//					lineList = line.getAncestors();
-//						
-//					for(Line l : lineList) {
-//						System.out.println("parent idx: "+l.getIdx());
-//					}
+//					System.out.println("curr line idx: "+line.getIdx());
+////					List<Line> lineList = new ArrayList<>();
+////					lineList = line.getAncestors();
+////						
+////					for(Line l : lineList) {
+////						System.out.println("\tparent idx: "+l.getIdx());
+////					}
 //
 //					System.out.println("\n\n	");
 //				}
@@ -181,10 +184,6 @@ public class AnnotationGraphBuilder {
 				childLineList = parentLineList;
 				parentLineList = new ArrayList<Line>();
 			}
-			
-			// Clear HashMap<path, childLineList> and HashMap<path, parentList> (CONSIDERABLE CODE)
-//			childPathWithLines.clear();
-//			parentPathWithLines.clear();
 		}
 		
 		return agm;

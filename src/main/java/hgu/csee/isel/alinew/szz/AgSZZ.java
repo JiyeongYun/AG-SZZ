@@ -40,31 +40,36 @@ public class AgSZZ {
 			AnnotationGraphBuilder agb = new AnnotationGraphBuilder(repo, commits);
 			AnnotationGraphModel agm = agb.buildAnnotationGraph();
 			
-			
-//			Iterator<HashMap<String, ArrayList<Line>>> iter = agm.values().iterator();
+			// TEST
+//			Iterator<RevCommit> iter = agm.keySet().iterator();
 //			
 //			int revCnt = 1;
 //			while(iter.hasNext()) {
-//				HashMap<String, ArrayList<Line>> map = iter.next();
-//				Iterator<ArrayList<Line>> iter2 = map.values().iterator();
-//			
+//				
+//				RevCommit rev = iter.next();
+//				
+//				System.out.println("\nRev Count : " + revCnt + "=========================\n");
+//				
+//				System.out.println("rev : " + rev.getName());
+//				HashMap<String, ArrayList<Line>> map = agm.get(rev);
+//				Iterator<String> iter2 = map.keySet().iterator();
+//				
 //				while(iter2.hasNext()) {
-//					ArrayList<Line> lines = iter2.next();
+//					String path = iter2.next();
+//					System.out.println("path : " + path);
+//					ArrayList<Line> lines = map.get(path);
 //					
 //					for(Line l : lines) {
-//						System.out.println("\tpath : " + l.getPath());
 //						System.out.println("\trev : " + l.getRev());
+//						System.out.println("\tpath : " + l.getPath() + "\n\n");
 //						
 //						System.out.println("content : " + l.getContent());
 //						System.out.println("index : " + l.getIdx());
-//						System.out.println("path : " + l.getPath());
-//						System.out.println("rev : " + l.getRev());
-//						System.out.println("type : " + l.getLineType());
+//						System.out.println("type : " + l.getLineType() + "\n") ;
 //					}
-//
+//					
 //				}
 //				
-//				System.out.println("\nRev Count : " + revCnt + "\n");
 //				revCnt++;
 //			}
 			
