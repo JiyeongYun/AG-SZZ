@@ -29,9 +29,9 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AgSZZ {
 	private static final int BFC_REVISION_LIMIT = 10;
-	private final String GIT_DIR = "/Users/yoon/git/DataForSZZ2";
-//	private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
-	private final String FIX_COMMIT = "8cc78ae9f7ac718a8ec5c6baac371f2891941cba";
+	private final String GIT_DIR = "/Users/kimseokjin/git/DataForSZZ";
+	private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
+//	private final String FIX_COMMIT = "8cc78ae9f7ac718a8ec5c6baac371f2891941cba";
 	private ArrayList<Line> BICList = new ArrayList<>();
 	private HashSet<Line> BICSet = new HashSet<Line>();
 	

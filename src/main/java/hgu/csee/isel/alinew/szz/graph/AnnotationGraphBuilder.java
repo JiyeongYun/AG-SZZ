@@ -41,6 +41,8 @@ public class AnnotationGraphBuilder {
 		HashMap<String, ArrayList<Line>> childPathWithLines; 
 		HashMap<String, ArrayList<Line>> parentPathWithLines;
 		
+		boolean isLastParentRev;
+		
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
 		Line childLine;
@@ -62,6 +64,8 @@ public class AnnotationGraphBuilder {
 			ArrayList<Line> parentLineList = new ArrayList<>();
 			ArrayList<Line> childLineList = new ArrayList<>();
 			
+			isLastParentRev = false;
+			
 			for(RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
 				if(revs.indexOf(childRev) == revs.size()-1) break;
@@ -70,119 +74,130 @@ public class AnnotationGraphBuilder {
 				parentPathWithLines = new HashMap<String, ArrayList<Line>>();
 			
 				RevCommit parentRev = revs.get(revs.indexOf(childRev)+1);
+				
+				// update isLastParentRev for avoiding building redundant AG when parent revision is the last one
+				if(revs.indexOf(parentRev) == revs.size()-1)
+					isLastParentRev = true;
 
 				String parentContent = Utils.fetchBlob(repo, parentRev, path);
 				String childContent = Utils.fetchBlob(repo, childRev, path);
 				
-				// get the parent line list from content
-				configureLineList(parentLineList, path, parentRev, parentContent);
-				// get the child line list only when initial iteration
-				if(revs.indexOf(childRev) == 0) 
-					configureLineList(childLineList, path, childRev, childContent);
-				
-				ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
-				
-				// map child line with its ancestor(s)
-				childIdx = 0;
-				hunkIdx = 0;
-				offset = 0;
-				
-				while(childIdx < childLineList.size()) {
+				// avoid building redundant annotation graphs
+				if(parentContent.equals(childContent) && !isLastParentRev) {
+					
+					continue;
+				}
+				else {
+					// get the parent line list from content
+					configureLineList(parentLineList, path, parentRev, parentContent);
+					// get the child line list only when initial iteration
+					if(revs.indexOf(childRev) == 0) 
+						configureLineList(childLineList, path, childRev, childContent);
+					
+					ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
+					
+					// map child line with its ancestor(s)
+					childIdx = 0;
+					hunkIdx = 0;
+					offset = 0;
+					
+					while(childIdx < childLineList.size()) {
+							
+						childLine = childLineList.get(childIdx);
+							
+						// Case 1 - when there is no hunk anymore
+						if(hunkList.size() <= hunkIdx) {
+							
+							childLine.setLineType(LineType.CONTEXT);
+							mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
+							
+							childIdx++;
+							continue;
+						}
+							
+						hunk = hunkList.get(hunkIdx);
+						beginOfChild = hunk.getBeginOfChild();
+						endOfChild = hunk.getEndOfChild();
+						hunkType = hunk.getHunkType();
 						
-					childLine = childLineList.get(childIdx);
+						// Case 2 - child index is out of hunk range 
+						if(childIdx < beginOfChild) {
+							
+							childLine.setLineType(LineType.CONTEXT);
+							mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
+							
+						}
+						// Case 3 - child index is in hunk range
+						else {  
+							switch(hunkType) {
+								case "INSERT" :
+									// When childIdx is the last index in hunk, increment hunk index
+									if(childIdx == endOfChild - 1) 
+										hunkIdx++;
 						
-					// Case 1 - when there is no hunk anymore
-					if(hunkList.size() <= hunkIdx) {
-						
-						childLine.setLineType(LineType.CONTEXT);
-						mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
+									childLine.setLineType(LineType.INSERT);
+									
+									offset--;
+									
+									break;
+									
+								case "REPLACE" :
+									// When childIdx is the last index in hunk, update offset and increment hunk index
+									if(childIdx == endOfChild - 1) {
+										offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
+										hunkIdx++;
+									}
+										
+									childLine.setLineType(LineType.REPLACE);
+									mapChildLineWithAncestors(hunk, parentLineList, childLine);
+									
+									break;
+									
+								case "DELETE" :	
+									offset += hunk.getRangeOfParent();
+									
+									childLine.setLineType(LineType.CONTEXT);
+									mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
+									
+									hunkIdx++;
+									
+									break;
+									
+								default : 
+									throw new EmptyHunkTypeException();
+							}
+						}
 						
 						childIdx++;
-						continue;
 					}
 						
-					hunk = hunkList.get(hunkIdx);
-					beginOfChild = hunk.getBeginOfChild();
-					endOfChild = hunk.getEndOfChild();
-					hunkType = hunk.getHunkType();
+					//TEST
+//					for(Line line : childLineList) {
+//						System.out.println("path: "+line.getPath());
+//						System.out.println("rev: "+line.getRev());
+//						System.out.println("lineType: "+line.getLineType());
+//						System.out.println("curr line idx: "+line.getIdx());
+////						List<Line> lineList = new ArrayList<>();
+////						lineList = line.getAncestors();
+////							
+////						for(Line l : lineList) {
+////							System.out.println("\tparent idx: "+l.getIdx());
+////						}
+	//
+//						System.out.println("\n\n	");
+//					}
 					
-					// Case 2 - child index is out of hunk range 
-					if(childIdx < beginOfChild) {
-						
-						childLine.setLineType(LineType.CONTEXT);
-						mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
-						
-					}
-					// Case 3 - child index is in hunk range
-					else {  
-						switch(hunkType) {
-							case "INSERT" :
-								// When childIdx is the last index in hunk, increment hunk index
-								if(childIdx == endOfChild - 1) 
-									hunkIdx++;
+					//make HashMap<path, childLineList> and HashMap<path, parentList> 
+					childPathWithLines.put(path, childLineList);
+					parentPathWithLines.put(path, parentLineList);
 					
-								childLine.setLineType(LineType.INSERT);
-								
-								offset--;
-								
-								break;
-								
-							case "REPLACE" :
-								// When childIdx is the last index in hunk, update offset and increment hunk index
-								if(childIdx == endOfChild - 1) {
-									offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
-									hunkIdx++;
-								}
-									
-								childLine.setLineType(LineType.REPLACE);
-								mapChildLineWithAncestors(hunk, parentLineList, childLine);
-								
-								break;
-								
-							case "DELETE" :	
-								offset += hunk.getRangeOfParent();
-								
-								childLine.setLineType(LineType.CONTEXT);
-								mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
-								
-								hunkIdx++;
-								
-								break;
-								
-							default : 
-								throw new EmptyHunkTypeException();
-						}
-					}
-					
-					childIdx++;
-				}
-					
-				//TEST
-//				for(Line line : childLineList) {
-//					System.out.println("path: "+line.getPath());
-//					System.out.println("rev: "+line.getRev());
-//					System.out.println("lineType: "+line.getLineType());
-//					System.out.println("curr line idx: "+line.getIdx());
-////					List<Line> lineList = new ArrayList<>();
-////					lineList = line.getAncestors();
-////						
-////					for(Line l : lineList) {
-////						System.out.println("\tparent idx: "+l.getIdx());
-////					}
-//
-//					System.out.println("\n\n	");
-//				}
+					// put subgraph into graph(i.e. AnnotationGraphModel)
+					agm.put(childRev, childPathWithLines);
+					agm.put(parentRev, parentPathWithLines);
 				
-				//make HashMap<path, childLineList> and HashMap<path, parentList> 
-				childPathWithLines.put(path, childLineList);
-				parentPathWithLines.put(path, parentLineList);
-				
-				// put subgraph into graph(i.e. AnnotationGraphModel)
-				agm.put(childRev, childPathWithLines);
-				agm.put(parentRev, parentPathWithLines);
-			
-				childLineList = parentLineList;
-				parentLineList = new ArrayList<Line>();
+					childLineList = parentLineList;
+					parentLineList = new ArrayList<Line>();
+				}	
 			}
 		}
 		
