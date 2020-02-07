@@ -119,7 +119,7 @@ public class AnnotationGraphBuilder {
 							case "INSERT" :
 								// When childIdx is the last index in hunk, increment hunk index
 								if(childIdx == endOfChild - 1) 
-									hunkIdx ++;
+									hunkIdx++;
 					
 								childLine.setLineType(LineType.INSERT);
 								
@@ -215,6 +215,12 @@ public class AnnotationGraphBuilder {
 	private RevsWithPath collectRevsWithSpecificPath(List<PathRevision> paths) throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
 		RevsWithPath revsInPath = new RevsWithPath();
 		
+		/**
+		 * TODO 방법1: 두 revision간에 hunk가 없으면 model을 만들지 않는다. 
+		 */
+		
+		
+		
 		for(PathRevision pr : paths) {
 			if(revsInPath.containsKey(pr.getPath())) {
 				List<RevCommit> lst = revsInPath.get(pr.getPath());
@@ -224,6 +230,7 @@ public class AnnotationGraphBuilder {
 				List<RevCommit> lst = new ArrayList<>();
 				lst.add(pr.getCommit());
 				revsInPath.put(pr.getPath(), lst);
+				System.out.println("path: "+pr.getPath());
 			}
 		}
 		
