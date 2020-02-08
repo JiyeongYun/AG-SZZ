@@ -100,7 +100,5 @@ public class Tracer {
 			
 			trace(ancestor);		
 		}
-					
 	}
-
 }

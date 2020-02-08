@@ -164,12 +164,12 @@ public class AnnotationGraphBuilder {
 //						System.out.println("rev: "+line.getRev());
 //						System.out.println("lineType: "+line.getLineType());
 //						System.out.println("curr line idx: "+line.getIdx());
-////						List<Line> lineList = new ArrayList<>();
-////						lineList = line.getAncestors();
-////							
-////						for(Line l : lineList) {
-////							System.out.println("\tparent idx: "+l.getIdx());
-////						}
+//						List<Line> lineList = new ArrayList<>();
+//						lineList = line.getAncestors();
+//							
+//						for(Line l : lineList) {
+//							System.out.println("\tparent idx: "+l.getIdx());
+//						}
 	//
 //						System.out.println("\n\n	");
 //					}
