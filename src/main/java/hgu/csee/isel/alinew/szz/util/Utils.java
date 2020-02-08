@@ -2,12 +2,15 @@ package hgu.csee.isel.alinew.szz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.diff.DiffAlgorithm;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.diff.RawText;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -17,6 +20,10 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
+import org.eclipse.jgit.util.io.DisabledOutputStream;
+
+import hgu.csee.isel.alinew.szz.model.Line;
 
 public class Utils {
 	
@@ -53,7 +60,7 @@ public class Utils {
 		}
 	}
 	
-	public static List<RevCommit> getCommits(Git git) throws NoHeadException, GitAPIException {
+	public static List<RevCommit> getRevs(Git git) throws NoHeadException, GitAPIException {
 		List<RevCommit> commits = new ArrayList<>();
 	
 		Iterable<RevCommit> logs;
@@ -65,5 +72,28 @@ public class Utils {
 		}
 		
 		return commits;
+	}
+	
+	public static List<DiffEntry> diff(Repository repo, RevTree parentTree, RevTree childTree) throws IOException{
+		List<DiffEntry> diffs;
+		
+		DiffFormatter df = new DiffFormatter(DisabledOutputStream.INSTANCE);
+		df.setRepository(repo);
+		df.setDiffAlgorithm(Utils.diffAlgorithm);
+		df.setDiffComparator(Utils.diffComparator);
+		df.setPathFilter(PathSuffixFilter.create(".java"));
+		
+		diffs = df.scan(parentTree, childTree);
+		
+		df.close();
+		
+		return diffs;
+	}
+	
+	public static List<Line> removeDuplicateElements(List<Line> BILines){
+		HashSet<Line> BILinesSet = new HashSet<>(BILines);
+		List<Line> BILinesWithOutDuplicates = new ArrayList<>(BILinesSet);
+		
+		return BILinesWithOutDuplicates;
 	}
 }
