@@ -89,11 +89,4 @@ public class Utils {
 		
 		return diffs;
 	}
-	
-	public static List<Line> removeDuplicateElements(List<Line> BILines){
-		HashSet<Line> BILinesSet = new HashSet<>(BILines);
-		List<Line> BILinesWithOutDuplicates = new ArrayList<>(BILinesSet);
-		
-		return BILinesWithOutDuplicates;
-	}
 }

@@ -2,6 +2,7 @@ package hgu.csee.isel.alinew.szz.trace;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.eclipse.jgit.diff.DiffEntry;
@@ -16,7 +17,7 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class Tracer {
 	private static final int REFACTOIRNG_THRESHOLD = 10;
-	private List<Line> BILines = new ArrayList<>();
+	private HashSet<Line> BILines = new HashSet<>();
 
 	public Tracer() {
 		// TODO Auto-generated constructor stub
@@ -85,7 +86,10 @@ public class Tracer {
 			}
 		}
 		
-		return Utils.removeDuplicateElements(BILines);
+		
+		List<Line> BILinesWithoutDuplicates = new ArrayList<>(BILines);
+		
+		return BILinesWithoutDuplicates;
 	}
 	
 	public void trace(Line line) {
