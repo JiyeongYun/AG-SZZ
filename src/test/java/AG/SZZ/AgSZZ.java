@@ -1,5 +1,6 @@
 package AG.SZZ;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,17 +8,23 @@ import java.util.regex.Pattern;
 public class AgSZZ {
 
 	public static void main(String[] args) {
-//		String str1 = "// 		str1";
-//		String str2 = "//* str2";
-//		String str3 = "*/ 		str3";
-//		String str4 = "*********str4";
-//		String str5 = "* str5";
-//		String str6 = "/////////str6";
-//		String str7 = "this is not comment!";
-//		String str8 = " //      str8";
-//		String str9 = " /** 	str9";
-//		String str10 = "str10 */";
-//		String str11 = "str11 ***/";
+		String comment1 = "  // 		str1  ";
+		String comment2 = "  //* str2  ";
+		String comment3 = "  */ 		str3  ";
+		String comment4 = "  *********str4  ";
+		String comment5 = " * str5  ";
+		String comment6 = " /////////str6";
+		String comment7 = " this is not comment!      ";
+		String comment8 = "  //      str8";
+		String comment9 = " /** 	str9";
+		String comment10 = "  str10 */";
+		String comment11 = "  str11 ***/";
+		String comment12 = "   hello    ";
+		ArrayList<String> arr = new ArrayList<>();
+		
+		arr.add(comment1); arr.add(comment2); arr.add(comment3); arr.add(comment4);
+		arr.add(comment5); arr.add(comment6); arr.add(comment7); arr.add(comment8);
+		arr.add(comment9); arr.add(comment10); arr.add(comment11); arr.add(comment12);
 
 //		str1 = str1.replaceAll( "[*]*/.*|[*]*|/.*|//.*|(\"(?:\\\\[^\"]|\\\\\"|.)*?\")|(?s)/\\*.*?\\*/", "$1" );
 
@@ -70,6 +77,32 @@ public class AgSZZ {
 			System.out.println("This string is available as a BIC candidate.\n");
 		}
 		
+		/**
+		 * comment
+		 */
+		
+//		isBIC = true;
+		System.out.println("=========comment========");
+
+	    pattern = Pattern.compile("(((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/*))+.*)");
+	    
+	    for(String str : arr) {
+			isBIC = true;
+	    	System.out.println(str);
+	    	matcher = pattern.matcher(str);
+		    
+		    while (matcher.find()) {
+		    	isBIC = false;			//찾으면 공백이 아니라는 뜻    
+		    	break;
+		    }
+		        
+		    if(isBIC) {
+		    	System.out.println("This string is available as a BIC candidate.\n");
+		    } else {
+		    	System.out.println("This is not BIC! This string is comment.\n");
+		    }
+	    }
+	    
 		
 	}
 

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -88,5 +90,20 @@ public class Utils {
 		df.close();
 		
 		return diffs;
+	}
+	
+	public boolean isComment(String str) {
+		boolean isBIC = true;
+		
+	    Pattern pattern = Pattern.compile("(((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/*))+.*)");
+	    Matcher matcher = pattern.matcher(str);
+	    
+	    while (matcher.find()) {
+	    	isBIC = false;			//찾으면 공백이 아니라는 뜻    
+	    	break;
+	    }
+	        
+	   return isBIC;
+		
 	}
 }

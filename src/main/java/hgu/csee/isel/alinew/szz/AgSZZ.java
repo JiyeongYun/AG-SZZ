@@ -29,7 +29,7 @@ import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AgSZZ {
-	private final String GIT_DIR = "/Users/kimseokjin/git/DataForSZZ";
+	private final String GIT_DIR = "/Users/yoon/git/DataForSZZ";
 	private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
 	private List<String> BFCList = new ArrayList<>();
 	
