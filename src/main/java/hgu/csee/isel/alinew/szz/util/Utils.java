@@ -2,7 +2,6 @@ package hgu.csee.isel.alinew.szz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,8 +23,6 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
-
-import hgu.csee.isel.alinew.szz.model.Line;
 
 public class Utils {
 	
@@ -93,17 +90,9 @@ public class Utils {
 	}
 	
 	public boolean isComment(String str) {
-		boolean isBIC = true;
-		
-	    Pattern pattern = Pattern.compile("(((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/*))+.*)");
+	    Pattern pattern = Pattern.compile("(^((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/+)).*)");
 	    Matcher matcher = pattern.matcher(str);
-	    
-	    while (matcher.find()) {
-	    	isBIC = false;			//찾으면 공백이 아니라는 뜻    
-	    	break;
-	    }
 	        
-	   return isBIC;
-		
+	   return matcher.find();
 	}
 }

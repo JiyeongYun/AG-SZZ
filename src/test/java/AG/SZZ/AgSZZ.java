@@ -1,7 +1,6 @@
 package AG.SZZ;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,12 +19,17 @@ public class AgSZZ {
 		String comment10 = "  str10 */";
 		String comment11 = "  str11 ***/";
 		String comment12 = "   hello    ";
+		String comment13 = " c = a * b";
+		String comment14 = "c = a / b";
+		String comment15 = "//					for(Line line : childLineList) {";
+		
 		ArrayList<String> arr = new ArrayList<>();
 		
 		arr.add(comment1); arr.add(comment2); arr.add(comment3); arr.add(comment4);
 		arr.add(comment5); arr.add(comment6); arr.add(comment7); arr.add(comment8);
 		arr.add(comment9); arr.add(comment10); arr.add(comment11); arr.add(comment12);
-
+		arr.add(comment13); arr.add(comment14); arr.add(comment15);
+		
 //		str1 = str1.replaceAll( "[*]*/.*|[*]*|/.*|//.*|(\"(?:\\\\[^\"]|\\\\\"|.)*?\")|(?s)/\\*.*?\\*/", "$1" );
 
 		
@@ -84,7 +88,9 @@ public class AgSZZ {
 //		isBIC = true;
 		System.out.println("=========comment========");
 
-	    pattern = Pattern.compile("(((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/*))+.*)");
+//	    pattern = Pattern.compile("(((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/*))+.*)");
+	    pattern = Pattern.compile("(^((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/+)).*)");
+		
 	    
 	    for(String str : arr) {
 			isBIC = true;
@@ -92,7 +98,7 @@ public class AgSZZ {
 	    	matcher = pattern.matcher(str);
 		    
 		    while (matcher.find()) {
-		    	isBIC = false;			//찾으면 공백이 아니라는 뜻    
+		    	isBIC = false;		    
 		    	break;
 		    }
 		        
