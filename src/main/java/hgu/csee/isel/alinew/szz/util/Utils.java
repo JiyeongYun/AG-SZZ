@@ -89,10 +89,14 @@ public class Utils {
 		return diffs;
 	}
 	
-	public boolean isComment(String str) {
+	public static boolean isComment(String str) {
 	    Pattern pattern = Pattern.compile("(^((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/+)).*)");
 	    Matcher matcher = pattern.matcher(str);
 	        
 	   return matcher.find();
+	}
+	
+	public static boolean isWhitespace(String str) {
+		return str.replaceAll("\\s", "").equals("");
 	}
 }

@@ -76,12 +76,18 @@ public class AnnotationGraphBuilder {
 				
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
+				
 				// get the child line list only when initial iteration
 				if(revs.indexOf(childRev) == 0) 
 					configureLineList(childLineList, path, childRev, childContent);
 				
-				ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
+				if(parentContent.equals(childContent)) {
 					
+					
+					continue;
+				}
+				ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
+				
 				// map child line with its ancestor(s)
 				childIdx = 0;
 				hunkIdx = 0;

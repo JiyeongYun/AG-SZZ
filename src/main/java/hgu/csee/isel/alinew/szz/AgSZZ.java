@@ -89,6 +89,7 @@ public class AgSZZ {
 			Tracer tracer = new Tracer();
 			List<Line> BILines = tracer.collectBILines(repo, revs, agm, BFCList);
 			
+			System.out.println("size: " + BILines.size());
 			//TEST
 			for(Line line : BILines) {
 				System.out.println("BIC: "+line.getIdx());

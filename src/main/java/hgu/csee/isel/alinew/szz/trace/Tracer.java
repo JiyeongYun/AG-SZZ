@@ -59,6 +59,7 @@ public class Tracer {
 						for (Edit edit : editList) {
 							int begin = -1;
 							int end = -1;
+							boolean isFormatChange = false;
 							
 							switch(edit.getType()) {
 								case DELETE:
@@ -67,27 +68,29 @@ public class Tracer {
 									break;
 							
 								case REPLACE:
+									begin = edit.getBeginB();
+									end = edit.getEndB();
+									
 									//get sublist of lines of parent
 									int begingOfParent = edit.getBeginA();
 									int endOfParent = edit.getEndA();
 									
 									//add all parent lines + remove white spaces
-									
+									String mergeParentContent = arrayToString(linesOfParent.subList(begingOfParent, endOfParent));
+
 									//add all child lines + remove white spaces
-									
+									String mergeChildContent = arrayToString(lines.subList(begin, end));
+
 									//check whether they are same
-									
-									
-									
-									begin = edit.getBeginB();
-									end = edit.getEndB();
+									if(mergeParentContent.equals(mergeChildContent)) isFormatChange = true;
 									break;
 								
 								default:
 									break;
 							}
 		//Phase 3 : trace
-							if(0 <= begin && 0 <= end) {
+							
+							if(isFormatChange || (0 <= begin && 0 <= end)) {
 								for(int i = begin; i < end; i++) {
 									Line line = lines.get(i);
 									trace(line);
@@ -105,17 +108,30 @@ public class Tracer {
 		return BILinesWithoutDuplicates;
 	}
 	
-	public void trace(Line line) {
-		// if there is no ancestor, that is BIC
-		if(line.getAncestors().size() == 0) {
-			BILines.add(line);
-			return;
+	public String arrayToString(List<Line> list) {
+		String mergeContent = "";
+		for(Line line : list) {
+			mergeContent += line.getContent();
 		}
+		
+		return mergeContent.replaceAll("\\s", "");	
+	}
 	
-		for(Line ancestor : line.getAncestors()) {	
-			//TODO If ignoring conditions are all met, do trace
+	public void trace(Line line) {
+		
+		if(!Utils.isComment(line.getContent()) && !Utils.isWhitespace(line.getContent())) {
 			
-			trace(ancestor);		
+			// if there is no ancestor, that is BIC
+			if(line.getAncestors().size() == 0) {
+				BILines.add(line);
+				return;
+			}
+		
+			for(Line ancestor : line.getAncestors()) {	
+				trace(ancestor);		
+			}
+			
 		}
+		
 	}
 }
