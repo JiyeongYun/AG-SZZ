@@ -14,9 +14,6 @@ import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 
 import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.model.Hunk;
@@ -196,18 +193,15 @@ public class AnnotationGraphBuilder {
 		return agm;
 	}
 
-	private List<PathRevision> configurePathRevisionList(Repository repo, List<RevCommit> commits)
-			throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
+	private List<PathRevision> configurePathRevisionList(Repository repo, List<RevCommit> commits) throws IOException {
 		List<PathRevision> paths = new ArrayList<>();
 
 		for (RevCommit commit : commits) {
-			if (commits.indexOf(commit) == commits.size() - 1)
-				break;
+			// skip the last commit
+			if (commits.indexOf(commit) == commits.size() - 1) break;
 
 			RevCommit parent = commit.getParent(0);
-
-			if (parent == null)
-				break;
+			if (parent == null) break;
 
 			List<DiffEntry> diffs = Utils.diff(repo, parent.getTree(), commit.getTree());
 
@@ -221,24 +215,7 @@ public class AnnotationGraphBuilder {
 				}
 			}
 		}
-
-//		for(RevCommit commit : commits) {
-//			RevTree tree = commit.getTree();
-//			
-//			TreeWalk treeWalk = new TreeWalk(repo);
-//			treeWalk.addTree(tree);
-//			treeWalk.setRecursive(true);
-//			treeWalk.setFilter(PathSuffixFilter.create(".java"));
-//			
-//			while(treeWalk.next()) {
-//				String path = treeWalk.getPathString();
-//				
-//				paths.add(new PathRevision(path, commit));			
-//			}
-//			
-//			treeWalk.close();
-//		}
-
+		
 		return paths;
 	}
 
@@ -261,17 +238,17 @@ public class AnnotationGraphBuilder {
 		}
 
 		// TEST
-		Iterator<String> pathList = revsInPath.keySet().iterator();
-
-		while (pathList.hasNext()) {
-			String path = pathList.next();
-			System.out.println("path: " + path);
-			List<RevCommit> list = revsInPath.get(path);
-			for (RevCommit rev : list) {
-				System.out.println("	rev: " + rev.getName());
-			}
-			
-		}		
+//		Iterator<String> pathList = revsInPath.keySet().iterator();
+//
+//		while (pathList.hasNext()) {
+//			String path = pathList.next();
+//			System.out.println("path: " + path);
+//			List<RevCommit> list = revsInPath.get(path);
+//			
+//			for (RevCommit rev : list) {
+//				System.out.println("	rev: " + rev.getName());
+//			}
+//		}		
 
 		return revsInPath;
 	}
