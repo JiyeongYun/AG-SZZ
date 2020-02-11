@@ -48,6 +48,7 @@ public class Tracer {
 						
 						// get list of lines of BFC
 						ArrayList<Line> lines = agm.get(childRev).get(path);
+						ArrayList<Line> linesOfParent = agm.get(parentRev).get(path);
 						
 						// get preFixSource and fixSource
 						String parentContent = Utils.fetchBlob(repo, parentRev, path);
@@ -66,6 +67,18 @@ public class Tracer {
 									break;
 							
 								case REPLACE:
+									//get sublist of lines of parent
+									int begingOfParent = edit.getBeginA();
+									int endOfParent = edit.getEndA();
+									
+									//add all parent lines + remove white spaces
+									
+									//add all child lines + remove white spaces
+									
+									//check whether they are same
+									
+									
+									
 									begin = edit.getBeginB();
 									end = edit.getEndB();
 									break;
