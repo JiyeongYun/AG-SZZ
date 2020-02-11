@@ -85,7 +85,7 @@ public class AgSZZ {
 //				revCnt++;
 //			}
 			
-			// TODO Phase 2 : Trace and collect BIC candidates
+			// Phase 2 : Trace and collect BIC candidates
 			Tracer tracer = new Tracer();
 			List<Line> BILines = tracer.collectBILines(repo, revs, agm, BFCList);
 			

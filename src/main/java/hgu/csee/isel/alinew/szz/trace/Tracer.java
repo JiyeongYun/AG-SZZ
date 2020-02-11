@@ -20,7 +20,7 @@ public class Tracer {
 	private HashSet<Line> BILines = new HashSet<>();
 
 	public Tracer() {
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel agm, List<String> BFCList) throws IOException{
@@ -76,20 +76,19 @@ public class Tracer {
 									int endOfParent = edit.getEndA();
 									
 									//add all parent lines + remove white spaces
-									String mergeParentContent = arrayToString(linesOfParent.subList(begingOfParent, endOfParent));
-
-									//add all child lines + remove white spaces
-									String mergeChildContent = arrayToString(lines.subList(begin, end));
+									String mergedChildContent = mergeLineList(lines.subList(begin, end));
+									String mergedParentContent = mergeLineList(linesOfParent.subList(begingOfParent, endOfParent));
 
 									//check whether they are same
-									if(mergeParentContent.equals(mergeChildContent)) isFormatChange = true;
+									if(mergedParentContent.equals(mergedChildContent)) isFormatChange = true;
+									
 									break;
 								
 								default:
 									break;
 							}
 		//Phase 3 : trace
-							
+					
 							if(isFormatChange || (0 <= begin && 0 <= end)) {
 								for(int i = begin; i < end; i++) {
 									Line line = lines.get(i);
@@ -102,24 +101,24 @@ public class Tracer {
 			}
 		}
 		
-		
 		List<Line> BILinesWithoutDuplicates = new ArrayList<>(BILines);
 		
 		return BILinesWithoutDuplicates;
 	}
 	
-	public String arrayToString(List<Line> list) {
-		String mergeContent = "";
+	public String mergeLineList(List<Line> list) {
+		String mergedContent = "";
+		
 		for(Line line : list) {
-			mergeContent += line.getContent();
+			mergedContent += line.getContent();
 		}
 		
-		return mergeContent.replaceAll("\\s", "");	
+		return mergedContent.replaceAll("\\s", "");	
 	}
 	
 	public void trace(Line line) {
-		
-		if(!Utils.isComment(line.getContent()) && !Utils.isWhitespace(line.getContent())) {
+		// 
+		if(Utils.isComment(line.getContent()) || Utils.isWhitespace(line.getContent())) {
 			
 			// if there is no ancestor, that is BIC
 			if(line.getAncestors().size() == 0) {
@@ -130,8 +129,6 @@ public class Tracer {
 			for(Line ancestor : line.getAncestors()) {	
 				trace(ancestor);		
 			}
-			
 		}
-		
 	}
 }
