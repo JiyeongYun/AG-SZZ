@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 public class AgSZZ {
 
 	public static void main(String[] args) {
+		int i = 0;   
 		String comment1 = "  // 		str1  ";
 		String comment2 = "  //* str2  ";
 		String comment3 = "  */ 		str3  ";
@@ -32,7 +33,6 @@ public class AgSZZ {
 		
 //		str1 = str1.replaceAll( "[*]*/.*|[*]*|/.*|//.*|(\"(?:\\\\[^\"]|\\\\\"|.)*?\")|(?s)/\\*.*?\\*/", "$1" );
 
-		
 		String str1 = "				  	 	 		    	     		  	 			   					";
 		String str2 = "  int i    	 =	0;";
 		String str3 = "    import     java.util.regex.Pattern;";
@@ -45,23 +45,23 @@ public class AgSZZ {
 		 * whitespace 01
 		 */
 		
-		str1 = str1.replaceAll("\\s+", "");
-		
-		if(str1.equals("")) {
-			System.out.println("This is not BIC! This string is whitespace.\n");
-		} else {
-			System.out.println("This string is available as a BIC candidate.\n");
-		}
+//		str1 = str1.replaceAll("\\s+", "");
+//		
+//		if(str1.equals("")) {
+//			System.out.println("This is not BIC! This string is whitespace.\n");
+//		} else {
+//			System.out.println("This string is available as a BIC candidate.\n");
+//		}
 		
 		
 		/**
 		 * whitespace 02
 		 */
 		
-//		boolean isBIC = false;
+		boolean isBIC = false;
 //
-//	    Pattern pattern = Pattern.compile("\\S");
-//	    Matcher matcher = pattern.matcher(str2);
+	    Pattern pattern = Pattern.compile("\\S");
+	    Matcher matcher = pattern.matcher(str2);
 //	        
 //	    while (matcher.find()) {
 //	    	isBIC = true;			//찾으면 공백이 아니라는 뜻    
@@ -89,29 +89,29 @@ public class AgSZZ {
 		 * comment
 		 */
 		
-//		isBIC = true;
-//		System.out.println("=========comment========");
-//
+		isBIC = true;
+		System.out.println("=========comment========");
+
 //	    pattern = Pattern.compile("(((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/*))+.*)");
-//	    pattern = Pattern.compile("(^((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/+)).*)");
-//		
-//	    
-//	    for(String str : arr) {
-//			isBIC = true;
-//	    	System.out.println(str);
-//	    	matcher = pattern.matcher(str);
-//		    
-//		    while (matcher.find()) {
-//		    	isBIC = false;		    
-//		    	break;
-//		    }
-//		        
-//		    if(isBIC) {
-//		    	System.out.println("This string is available as a BIC candidate.\n");
-//		    } else {
-//		    	System.out.println("This is not BIC! This string is comment.\n");
-//		    }
-//	    }
+	    pattern = Pattern.compile("(^((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/+)).*)");
+		
+	    
+	    for(String str : arr) {
+			isBIC = true;
+	    	System.out.println(str);
+	    	matcher = pattern.matcher(str);
+		    
+		    while (matcher.find()) {
+		    	isBIC = false;		    
+		    	break;
+		    }
+		        
+		    if(isBIC) {
+		    	System.out.println("This string is available as a BIC candidate.\n");
+		    } else {
+		    	System.out.println("This is not BIC! This string is comment.\n");
+		    }
+	    }
 	    
 		
 	}

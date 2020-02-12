@@ -3,8 +3,6 @@ package hgu.csee.isel.alinew.szz.util;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -15,7 +13,8 @@ import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.diff.RawText;
 import org.eclipse.jgit.diff.RawTextComparator;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.LargeObjectException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -23,6 +22,8 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
+
+import hgu.csee.isel.alinew.szz.model.Line;
 
 public class Utils {
 	
@@ -39,7 +40,7 @@ public class Utils {
 		return diffList;
 	}
 	
-	public static String fetchBlob(Repository repo, RevCommit commit, String path) throws IncorrectObjectTypeException, IOException{
+	public static String fetchBlob(Repository repo, RevCommit commit, String path) throws LargeObjectException, MissingObjectException, IOException {
 
 		// Makes it simpler to release the allocated resources in one go
 		ObjectReader reader = repo.newObjectReader();
@@ -89,14 +90,17 @@ public class Utils {
 		return diffs;
 	}
 	
-	public static boolean isComment(String str) {
-	    Pattern pattern = Pattern.compile("(^((\\s*\\/+\\**)|(\\s*\\*+)|(.*\\*+\\/+)).*)");
-	    Matcher matcher = pattern.matcher(str);
-	        
-	   return matcher.find();
-	}
-	
 	public static boolean isWhitespace(String str) {
 		return str.replaceAll("\\s", "").equals("");
+	}
+	
+	public static String mergeLineList(List<Line> list) {
+		String mergedContent = "";
+		
+		for(Line line : list) {
+			mergedContent += line.getContent();
+		}
+		
+		return mergedContent.replaceAll("\\s", "");	
 	}
 }

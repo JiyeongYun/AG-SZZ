@@ -43,5 +43,4 @@ public class Hunk {
 	public int getRangeOfChild() {
 		return Math.abs(this.beginOfChild - this.endOfChild);
 	}
-
 }

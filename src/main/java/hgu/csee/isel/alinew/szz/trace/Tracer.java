@@ -20,36 +20,37 @@ public class Tracer {
 	private HashSet<Line> BILines = new HashSet<>();
 
 	public Tracer() {
-		
+
 	}
-	
-	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel agm, List<String> BFCList) throws IOException{
+
+	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel agm,
+			List<String> BFCList) throws IOException {
 		// Phase 1 : traverse all commits and find BFC
-		for(String bfc : BFCList) {
-			for(RevCommit childRev : revs) {
-				if(childRev.getName().equals(bfc)) {
+		for (String bfc : BFCList) {
+			for (RevCommit childRev : revs) {
+				if (childRev.getName().equals(bfc)) {
 		// Phase 2 : Find path and line index for tracing
 					RevCommit parentRev = childRev.getParent(0); // Get BFC pre-commit (i.e. BFC~1 commit)
 					if (parentRev == null) {
 						System.err.println("ERROR: Parent commit does not exist: " + childRev.name());
 						break;
 					}
-					
+
 					List<DiffEntry> diffs = Utils.diff(repo, parentRev.getTree(), childRev.getTree());
-					
-					/* 
-					 * HEURISTIC : If the number of changed path in BFC is greater than 10, 
-					 * that commit is highly likely to involve refactoring codes that can be noise for collecting BIC.
-					*/
-					if(REFACTOIRNG_THRESHOLD <= diffs.size()) continue;
-					
+
+					/*
+					 * HEURISTIC : If the number of changed path in BFC is greater than 10, that
+					 * commit is highly likely to involve refactoring codes that can be noise for
+					 * collecting BIC.
+					 */
+					if (REFACTOIRNG_THRESHOLD <= diffs.size()) continue;
+
 					for (DiffEntry diff : diffs) {
 						String path = diff.getNewPath();
-						
+
 						// get list of lines of BFC
 						ArrayList<Line> lines = agm.get(childRev).get(path);
-						ArrayList<Line> linesOfParent = agm.get(parentRev).get(path);
-						
+
 						// get preFixSource and fixSource
 						String parentContent = Utils.fetchBlob(repo, parentRev, path);
 						String childContent = Utils.fetchBlob(repo, childRev, path);
@@ -59,38 +60,26 @@ public class Tracer {
 						for (Edit edit : editList) {
 							int begin = -1;
 							int end = -1;
-							boolean isFormatChange = false;
-							
-							switch(edit.getType()) {
-								case DELETE:
-									begin = edit.getBeginA();
-									end = edit.getEndA();
-									break;
-							
-								case REPLACE:
-									begin = edit.getBeginB();
-									end = edit.getEndB();
-									
-									//get sublist of lines of parent
-									int begingOfParent = edit.getBeginA();
-									int endOfParent = edit.getEndA();
-									
-									//add all parent lines + remove white spaces
-									String mergedChildContent = mergeLineList(lines.subList(begin, end));
-									String mergedParentContent = mergeLineList(linesOfParent.subList(begingOfParent, endOfParent));
 
-									//check whether they are same
-									if(mergedParentContent.equals(mergedChildContent)) isFormatChange = true;
-									
-									break;
+							switch (edit.getType()) {
+							case DELETE:
+								begin = edit.getBeginA();
+								end = edit.getEndA();
 								
-								default:
-									break;
+								break;
+
+							case REPLACE:
+								begin = edit.getBeginB();
+								end = edit.getEndB();
+								break;
+
+							default:
+								break;
 							}
-		//Phase 3 : trace
-					
-							if(isFormatChange || (0 <= begin && 0 <= end)) {
-								for(int i = begin; i < end; i++) {
+							
+			// Phase 3 : trace
+							if (0 <= begin && 0 <= end) {
+								for (int i = begin; i < end; i++) {
 									Line line = lines.get(i);
 									trace(line);
 								}
@@ -100,35 +89,22 @@ public class Tracer {
 				}
 			}
 		}
-		
+
 		List<Line> BILinesWithoutDuplicates = new ArrayList<>(BILines);
-		
+
 		return BILinesWithoutDuplicates;
 	}
-	
-	public String mergeLineList(List<Line> list) {
-		String mergedContent = "";
-		
-		for(Line line : list) {
-			mergedContent += line.getContent();
-		}
-		
-		return mergedContent.replaceAll("\\s", "");	
-	}
-	
+
 	public void trace(Line line) {
-		// 
-		if(Utils.isComment(line.getContent()) || Utils.isWhitespace(line.getContent())) {
-			
-			// if there is no ancestor, that is BIC
-			if(line.getAncestors().size() == 0) {
-				BILines.add(line);
-				return;
-			}
-		
-			for(Line ancestor : line.getAncestors()) {	
-				trace(ancestor);		
-			}
+		for(Line ancestor : line.getAncestors()) {		
+			// neither whitespace nor format change is the Bug Introducing Lines
+			if(!Utils.isWhitespace(ancestor.getContent())) {
+				if(ancestor.isFormatChange()) {
+					trace(ancestor);
+				} else {
+					BILines.add(ancestor);
+				}
+			} 
 		}
 	}
 }

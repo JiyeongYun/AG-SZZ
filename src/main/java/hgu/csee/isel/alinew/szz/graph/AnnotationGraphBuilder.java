@@ -9,9 +9,6 @@ import java.util.List;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
-import org.eclipse.jgit.errors.CorruptObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
@@ -33,8 +30,7 @@ public class AnnotationGraphBuilder {
 		this.commits = commits;
 	}
 
-	public AnnotationGraphModel buildAnnotationGraph() throws MissingObjectException, IncorrectObjectTypeException,
-			CorruptObjectException, IOException, EmptyHunkTypeException {
+	public AnnotationGraphModel buildAnnotationGraph() throws IOException, EmptyHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
 
 		HashMap<String, ArrayList<Line>> childPathWithLines;
@@ -47,7 +43,7 @@ public class AnnotationGraphBuilder {
 		String hunkType;
 
 		List<PathRevision> pathRevList = configurePathRevisionList(repo, commits);
-		System.out.println("pathRevList size: " + pathRevList.size());
+		
 		RevsWithPath revsWithPath = collectRevsWithSpecificPath(pathRevList);
 
 		// traverse all paths in the repo
@@ -63,8 +59,7 @@ public class AnnotationGraphBuilder {
 
 			for (RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
-				if (revs.indexOf(childRev) == revs.size() - 1)
-					break;
+				if (revs.indexOf(childRev) == revs.size() - 1) break;
 
 				childPathWithLines = new HashMap<String, ArrayList<Line>>();
 				parentPathWithLines = new HashMap<String, ArrayList<Line>>();
@@ -135,7 +130,14 @@ public class AnnotationGraphBuilder {
 								offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
 								hunkIdx++;
 							}
-
+							
+							// check whether format change happens
+							String mergedParentContent = Utils.mergeLineList(parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
+							String mergedChildContent = Utils.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
+							
+							if(mergedParentContent.equals(mergedChildContent)) 
+								childLine.setFormatChange(true);
+							
 							childLine.setLineType(LineType.REPLACE);
 							mapChildLineWithAncestors(hunk, parentLineList, childLine);
 
@@ -171,7 +173,7 @@ public class AnnotationGraphBuilder {
 //							for(Line l : lineList) {
 //								System.out.println("\tparent idx: "+l.getIdx());
 //							}
-				//
+//				
 //							System.out.println("\n\n	");
 //						}
 
@@ -187,7 +189,6 @@ public class AnnotationGraphBuilder {
 				parentLineList = new ArrayList<Line>();
 
 			}
-
 		}
 
 		return agm;
@@ -219,8 +220,7 @@ public class AnnotationGraphBuilder {
 		return paths;
 	}
 
-	private RevsWithPath collectRevsWithSpecificPath(List<PathRevision> paths)
-			throws MissingObjectException, IncorrectObjectTypeException, CorruptObjectException, IOException {
+	private RevsWithPath collectRevsWithSpecificPath(List<PathRevision> paths) {
 		RevsWithPath revsInPath = new RevsWithPath();
 
 		for (PathRevision pr : paths) {

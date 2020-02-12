@@ -3,33 +3,22 @@ package hgu.csee.isel.alinew.szz;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
-import org.eclipse.jgit.diff.Edit;
-import org.eclipse.jgit.diff.Edit.Type;
-import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
-import org.eclipse.jgit.util.io.DisabledOutputStream;
 
 import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
 import hgu.csee.isel.alinew.szz.model.Line;
-import hgu.csee.isel.alinew.szz.model.LineType;
 import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AgSZZ {
-	private final String GIT_DIR = "/Users/yoon/git/DataForINSERT";
+	private final String GIT_DIR = "/Users/kimseokjin/git/DataForSZZ";
 	private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
 	private List<String> BFCList = new ArrayList<>();
 	
@@ -86,6 +75,7 @@ public class AgSZZ {
 //			}
 			
 			// Phase 2 : Trace and collect BIC candidates
+			// Phase 3 : Filter out format changes, comments, etc among BIC candidates
 			Tracer tracer = new Tracer();
 			List<Line> BILines = tracer.collectBILines(repo, revs, agm, BFCList);
 			
@@ -96,12 +86,7 @@ public class AgSZZ {
 				System.out.println("Path: "+line.getPath());
 				System.out.println("Revision: "+line.getRev());
 				System.out.println("Content: "+line.getContent() +"\n");
-			}
-			
-			// TODO Phase 3 : Filter out format changes, comments, etc among BIC candidates
-			
-			
-			
+			}	
 			
 		} catch (IOException | GitAPIException | EmptyHunkTypeException e) {
 			e.printStackTrace();

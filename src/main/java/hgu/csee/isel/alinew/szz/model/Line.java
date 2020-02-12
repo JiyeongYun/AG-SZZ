@@ -9,12 +9,13 @@ public class Line {
 	private int idx;
 	private LineType lineType;
 	private List<Line> ancestors;
+	private boolean isFormatChange;
 
 	public Line(String path, String rev, String content, int idx, List<Line> ancestors) {
-		this(path, rev, content, idx, LineType.CONTEXT, ancestors);
+		this(path, rev, content, idx, LineType.CONTEXT, ancestors, false);
 	}
 
-	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors) {
+	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors, boolean isFormatChange) {
 		super();
 		this.path = path;
 		this.rev = rev;
@@ -22,6 +23,7 @@ public class Line {
 		this.idx = idx;
 		this.lineType = lineType;
 		this.ancestors = ancestors;
+		this.isFormatChange = isFormatChange;
 	}
 
 	public String getPath() {
@@ -72,4 +74,11 @@ public class Line {
 		this.ancestors = ancestors;
 	}
 
+	public boolean isFormatChange() {
+		return isFormatChange;
+	}
+
+	public void setFormatChange(boolean isFormatChange) {
+		this.isFormatChange = isFormatChange;
+	}
 }
