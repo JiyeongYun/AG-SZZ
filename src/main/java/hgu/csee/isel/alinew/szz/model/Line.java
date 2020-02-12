@@ -15,7 +15,8 @@ public class Line {
 		this(path, rev, content, idx, LineType.CONTEXT, ancestors, false);
 	}
 
-	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors, boolean isFormatChange) {
+	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors,
+			boolean isFormatChange) {
 		super();
 		this.path = path;
 		this.rev = rev;
@@ -41,7 +42,7 @@ public class Line {
 	public void setRev(String rev) {
 		this.rev = rev;
 	}
-	
+
 	public String getContent() {
 		return content;
 	}

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
 import org.eclipse.jgit.lib.Repository;
@@ -16,21 +15,14 @@ import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.model.Hunk;
 import hgu.csee.isel.alinew.szz.model.Line;
 import hgu.csee.isel.alinew.szz.model.LineType;
-import hgu.csee.isel.alinew.szz.model.PathRevision;
 import hgu.csee.isel.alinew.szz.model.RevsWithPath;
+import hgu.csee.isel.alinew.szz.util.GitUtils;
 import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AnnotationGraphBuilder {
-	private Repository repo;
-	private List<RevCommit> commits;
 
-	public AnnotationGraphBuilder(Repository repo, List<RevCommit> commits) {
-		super();
-		this.repo = repo;
-		this.commits = commits;
-	}
-
-	public AnnotationGraphModel buildAnnotationGraph() throws IOException, EmptyHunkTypeException {
+	public AnnotationGraphModel buildAnnotationGraph(Repository repo, RevsWithPath revsWithPath)
+			throws IOException, EmptyHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
 
 		HashMap<String, ArrayList<Line>> childPathWithLines;
@@ -41,10 +33,6 @@ public class AnnotationGraphBuilder {
 		Line childLine;
 		Hunk hunk;
 		String hunkType;
-
-		List<PathRevision> pathRevList = configurePathRevisionList(repo, commits);
-		
-		RevsWithPath revsWithPath = collectRevsWithSpecificPath(pathRevList);
 
 		// traverse all paths in the repo
 		Iterator<String> paths = revsWithPath.keySet().iterator();
@@ -59,15 +47,16 @@ public class AnnotationGraphBuilder {
 
 			for (RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
-				if (revs.indexOf(childRev) == revs.size() - 1) break;
+				if (revs.indexOf(childRev) == revs.size() - 1)
+					break;
 
 				childPathWithLines = new HashMap<String, ArrayList<Line>>();
 				parentPathWithLines = new HashMap<String, ArrayList<Line>>();
 
 				RevCommit parentRev = revs.get(revs.indexOf(childRev) + 1);
 
-				String parentContent = Utils.fetchBlob(repo, parentRev, path);
-				String childContent = Utils.fetchBlob(repo, childRev, path);
+				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path));
+				String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path));
 
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
@@ -76,7 +65,7 @@ public class AnnotationGraphBuilder {
 				if (revs.indexOf(childRev) == 0)
 					configureLineList(childLineList, path, childRev, childContent);
 
-				ArrayList<Hunk> hunkList = configureHunkList(Utils.getEditListFromDiff(parentContent, childContent));
+				ArrayList<Hunk> hunkList = configureHunkList(GitUtils.getEditListFromDiff(parentContent, childContent));
 
 				// map child line with its ancestor(s)
 				childIdx = 0;
@@ -130,14 +119,16 @@ public class AnnotationGraphBuilder {
 								offset += hunk.getRangeOfParent() - hunk.getRangeOfChild();
 								hunkIdx++;
 							}
-							
+
 							// check whether format change happens
-							String mergedParentContent = Utils.mergeLineList(parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
-							String mergedChildContent = Utils.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
-							
-							if(mergedParentContent.equals(mergedChildContent)) 
+							String mergedParentContent = Utils.mergeLineList(
+									parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
+							String mergedChildContent = Utils
+									.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
+
+							if (mergedParentContent.equals(mergedChildContent))
 								childLine.setFormatChange(true);
-							
+
 							childLine.setLineType(LineType.REPLACE);
 							mapChildLineWithAncestors(hunk, parentLineList, childLine);
 
@@ -162,20 +153,23 @@ public class AnnotationGraphBuilder {
 				}
 
 				// TEST
-//						for(Line line : childLineList) {
-//							System.out.println("path: "+line.getPath());
-//							System.out.println("rev: "+line.getRev());
-//							System.out.println("lineType: "+line.getLineType());
-//							System.out.println("curr line idx: "+line.getIdx());
-//							List<Line> lineList = new ArrayList<>();
-//							lineList = line.getAncestors();
-//								
-//							for(Line l : lineList) {
-//								System.out.println("\tparent idx: "+l.getIdx());
-//							}
-//				
-//							System.out.println("\n\n	");
-//						}
+//				for (Line line : childLineList) {
+//					System.out.println("path: " + line.getPath());
+//					System.out.println("rev: " + line.getRev());
+//					System.out.println("content : " + line.getContent());
+//					System.out.println("curr line idx: " + line.getIdx());
+//					System.out.println("lineType: " + line.getLineType());
+//
+//					List<Line> ancestors = line.getAncestors();
+//
+//					for (Line ancestor : ancestors) {
+//						System.out.println("\tparent rev: " + ancestor.getRev());
+//						System.out.println("\tparent content : " + ancestor.getContent());
+//						System.out.println("\tparent idx: " + ancestor.getIdx());
+//					}
+//
+//					System.out.println("\n\n");
+//				}
 
 				// make HashMap<path, childLineList> and HashMap<path, parentList>
 				childPathWithLines.put(path, childLineList);
@@ -192,65 +186,6 @@ public class AnnotationGraphBuilder {
 		}
 
 		return agm;
-	}
-
-	private List<PathRevision> configurePathRevisionList(Repository repo, List<RevCommit> commits) throws IOException {
-		List<PathRevision> paths = new ArrayList<>();
-
-		for (RevCommit commit : commits) {
-			// skip the last commit
-			if (commits.indexOf(commit) == commits.size() - 1) break;
-
-			RevCommit parent = commit.getParent(0);
-			if (parent == null) break;
-
-			List<DiffEntry> diffs = Utils.diff(repo, parent.getTree(), commit.getTree());
-
-			// get changed paths
-			for (DiffEntry diff : diffs) {
-				String path = diff.getNewPath();
-
-				// Filter only java file
-				if (path.endsWith(".java")) {
-					paths.add(new PathRevision(path, commit));
-				}
-			}
-		}
-		
-		return paths;
-	}
-
-	private RevsWithPath collectRevsWithSpecificPath(List<PathRevision> paths) {
-		RevsWithPath revsInPath = new RevsWithPath();
-
-		for (PathRevision pr : paths) {
-			if (revsInPath.containsKey(pr.getPath())) {
-				List<RevCommit> lst = revsInPath.get(pr.getPath());
-				lst.add(pr.getCommit());
-				revsInPath.replace(pr.getPath(), lst);
-			} else {
-				List<RevCommit> lst = new ArrayList<>();
-				lst.add(pr.getCommit());
-				revsInPath.put(pr.getPath(), lst);
-
-			}
-
-		}
-
-		// TEST
-//		Iterator<String> pathList = revsInPath.keySet().iterator();
-//
-//		while (pathList.hasNext()) {
-//			String path = pathList.next();
-//			System.out.println("path: " + path);
-//			List<RevCommit> list = revsInPath.get(path);
-//			
-//			for (RevCommit rev : list) {
-//				System.out.println("	rev: " + rev.getName());
-//			}
-//		}		
-
-		return revsInPath;
 	}
 
 	private void configureLineList(ArrayList<Line> lst, String path, RevCommit rev, String content) {
@@ -292,7 +227,10 @@ public class AnnotationGraphBuilder {
 	}
 
 	private void mapChildLineWithAncestors(Hunk hunk, List<Line> parentLineList, Line childLine) {
+
 		List<Line> ancestorsOfChild = parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent());
 		childLine.setAncestors(ancestorsOfChild);
+
 	}
+
 }

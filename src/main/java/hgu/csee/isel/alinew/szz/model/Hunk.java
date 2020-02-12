@@ -15,7 +15,7 @@ public class Hunk {
 		this.beginOfChild = beginB;
 		this.endOfChild = endB;
 	}
-	
+
 	public String getHunkType() {
 		return hunkType;
 	}
@@ -39,7 +39,7 @@ public class Hunk {
 	public int getRangeOfParent() {
 		return Math.abs(this.beginOfParent - this.endOfParent);
 	}
-	
+
 	public int getRangeOfChild() {
 		return Math.abs(this.beginOfChild - this.endOfChild);
 	}

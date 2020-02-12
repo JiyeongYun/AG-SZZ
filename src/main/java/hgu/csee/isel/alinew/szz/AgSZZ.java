@@ -14,8 +14,9 @@ import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
 import hgu.csee.isel.alinew.szz.model.Line;
+import hgu.csee.isel.alinew.szz.model.RevsWithPath;
 import hgu.csee.isel.alinew.szz.trace.Tracer;
-import hgu.csee.isel.alinew.szz.util.Utils;
+import hgu.csee.isel.alinew.szz.util.GitUtils;
 
 public class AgSZZ {
 	private final String GIT_DIR = "/Users/kimseokjin/git/DataForSZZ";
@@ -34,12 +35,14 @@ public class AgSZZ {
 		try {
 			git = Git.open(new File(GIT_DIR));
 			repo = git.getRepository();
-			List<RevCommit> revs = Utils.getRevs(git);
+			List<RevCommit> revs = GitUtils.getRevs(git);
 			BFCList.add(FIX_COMMIT);
 			
+			RevsWithPath revsWithPath = GitUtils.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs));
+			
 			// Phase 1 : Build the annotation graph
-			AnnotationGraphBuilder agb = new AnnotationGraphBuilder(repo, revs);
-			AnnotationGraphModel agm = agb.buildAnnotationGraph();
+			AnnotationGraphBuilder agb = new AnnotationGraphBuilder();
+			AnnotationGraphModel agm = agb.buildAnnotationGraph(repo, revsWithPath);
 			
 			// TEST
 //			Iterator<RevCommit> iter = agm.keySet().iterator();
@@ -77,10 +80,10 @@ public class AgSZZ {
 			// Phase 2 : Trace and collect BIC candidates
 			// Phase 3 : Filter out format changes, comments, etc among BIC candidates
 			Tracer tracer = new Tracer();
-			List<Line> BILines = tracer.collectBILines(repo, revs, agm, BFCList);
+			List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList);
 			
-			System.out.println("size: " + BILines.size());
 			//TEST
+			System.out.println("size: " + BILines.size());
 			for(Line line : BILines) {
 				System.out.println("BIC: "+line.getIdx());
 				System.out.println("Path: "+line.getPath());
@@ -90,6 +93,6 @@ public class AgSZZ {
 			
 		} catch (IOException | GitAPIException | EmptyHunkTypeException e) {
 			e.printStackTrace();
-		} 
+		}
 	}
 }
