@@ -55,8 +55,8 @@ public class Tracer {
 						ArrayList<Line> linesToTrace = agm.get(childRev).get(path);
 
 						// get preFixSource and fixSource
-						String parentContent = GitUtils.fetchBlob(repo, parentRev, path);
-						String childContent = GitUtils.fetchBlob(repo, childRev, path);
+						String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path));
+						String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path));
 
 						// get line indices that fix bug
 						EditList editList = GitUtils.getEditListFromDiff(parentContent, childContent);

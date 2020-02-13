@@ -1,6 +1,8 @@
 package hgu.csee.isel.alinew.szz.util;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.Comment;
 
@@ -47,5 +49,18 @@ public class Utils {
 		code = pre + comments + post;
 
 		return code;
+	}
+	
+	public static int getLineNum(String str) {
+		Pattern pattern = Pattern.compile("\r\n|\r|\n");
+	    Matcher matcher = pattern.matcher(str);
+	
+	    int lineNum = 1;
+		
+		while (matcher.find()) {
+			lineNum ++;
+		}
+		
+		return lineNum;
 	}
 }

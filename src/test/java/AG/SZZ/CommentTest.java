@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AgSZZ {
+public class CommentTest {
 
 	public static void main(String[] args) {
 		int i = 0;   

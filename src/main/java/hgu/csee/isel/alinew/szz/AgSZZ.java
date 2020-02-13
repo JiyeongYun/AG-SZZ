@@ -19,8 +19,8 @@ import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
 
 public class AgSZZ {
-	private final String GIT_DIR = "/Users/kimseokjin/git/DataForSZZ";
-	private final String FIX_COMMIT = "768b0df07b2722db926e99a8f917deeb5b55d628";
+	private final String GIT_DIR = "/Users/kimseokjin/git/incubator-iotdb";
+	private final String FIX_COMMIT = "17f3a429a5c9a243abb61b078d9511c523c3954e";
 	private List<String> BFCList = new ArrayList<>();
 	
 	private static Git git;

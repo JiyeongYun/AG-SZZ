@@ -58,12 +58,23 @@ public class AnnotationGraphBuilder {
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path));
 				String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path));
 
+				// TEST
+				System.out.println("\n\npath : " + path);
+				System.out.println("\tparent rev : " + parentRev.getName());
+//				System.out.println("parent content : \n" + parentContent + "\n");
+				System.out.println("\tchild rev : " + childRev.getName());
+//				System.out.println("child content : \n" + childContent + "\n");
+
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
 
 				// get the child line list only when initial iteration
 				if (revs.indexOf(childRev) == 0)
 					configureLineList(childLineList, path, childRev, childContent);
+
+				// TEST
+//				System.out.println("Size of PLL : " + parentLineList.size());
+//				System.out.println("Size of CLL : " + childLineList.size());
 
 				ArrayList<Hunk> hunkList = configureHunkList(GitUtils.getEditListFromDiff(parentContent, childContent));
 
@@ -90,6 +101,12 @@ public class AnnotationGraphBuilder {
 					beginOfChild = hunk.getBeginOfChild();
 					endOfChild = hunk.getEndOfChild();
 					hunkType = hunk.getHunkType();
+
+					// TEST
+//					System.out.println("\nBegin of parent : " + hunk.getBeginOfParent());
+//					System.out.println("End of parent : " + hunk.getEndOfParent());
+//					System.out.println("Begin of child : " + hunk.getBeginOfChild());
+//					System.out.println("End of child : " + hunk.getEndOfChild() + "\n");
 
 					// Case 2 - child index is out of hunk range
 					if (childIdx < beginOfChild) {
@@ -189,14 +206,43 @@ public class AnnotationGraphBuilder {
 	}
 
 	private void configureLineList(ArrayList<Line> lst, String path, RevCommit rev, String content) {
-		String[] lineContentArr = content.split("\n");
+		/*
+		 * [REMARK]
+		 * 
+		 * (Size of lineContentArr) >= (Size of splittedContentArr)
+		 * 
+		 * ============= example ==============
+		 *  public class HelloWorld{
+		 * 		System.out.println("Hello");
+		 * 
+		 * }
+		 * 
+		 * 
+		 * ===================================
+		 * 
+		 * (Size of lineContentArr) = 6
+		 * (Size of splittedContentArr) = 4
+		 * 
+		 * Check the src/test/java/splitTest.java
+		 */
+		
+		String[] lineContentArr = new String[Utils.getLineNum(content)];
+
+		// initial setting
+		for (int i = 0; i < lineContentArr.length; i++) {
+			lineContentArr[i] = "";
+		}
+
+		String[] splittedContentArr = content.split("\r\n|\r|\n");
+
+		for (int i = 0; i < splittedContentArr.length; i++) {
+			lineContentArr[i] = splittedContentArr[i];
+		}
 
 		for (int i = 0; i < lineContentArr.length; i++) {
-			String lineContent = lineContentArr[i];
-
 			// make new Line
 			List<Line> ancestors = new ArrayList<>();
-			Line line = new Line(path, rev.getName(), lineContent, i, ancestors);
+			Line line = new Line(path, rev.getName(), lineContentArr[i], i, ancestors);
 
 			lst.add(line);
 		}
