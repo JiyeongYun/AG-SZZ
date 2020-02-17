@@ -32,4 +32,7 @@ dependencies {
 	
 	// http://mvnrepository.com/artifact/org.eclipse.jdt/org.eclipse.jdt.core
 	compile group: 'org.eclipse.jdt', name: 'org.eclipse.jdt.core', version: '3.10.0'
+	
+	// https://mvnrepository.com/artifact/com.google.guava/guava
+	compile group: 'com.google.guava', name: 'guava', version: '28.2-jre'
 }

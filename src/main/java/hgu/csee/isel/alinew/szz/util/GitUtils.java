@@ -90,10 +90,10 @@ public class GitUtils {
 		return paths;
 	}
 
-	public static RevsWithPath collectRevsWithSpecificPath(List<PathRevision> paths) {
+	public static RevsWithPath collectRevsWithSpecificPath(List<PathRevision> pathRevisions) {
 		RevsWithPath revsInPath = new RevsWithPath();
 
-		for (PathRevision pr : paths) {
+		for (PathRevision pr : pathRevisions) {
 			if (revsInPath.containsKey(pr.getPath())) {
 				List<RevCommit> lst = revsInPath.get(pr.getPath());
 				lst.add(pr.getCommit());
@@ -141,7 +141,7 @@ public class GitUtils {
 			return "";
 		}
 	}
-	
+
 	public static String fetchBlob(Repository repo, String revSpec, String path)
 			throws RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
 

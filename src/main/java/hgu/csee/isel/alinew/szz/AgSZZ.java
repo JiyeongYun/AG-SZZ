@@ -22,28 +22,33 @@ public class AgSZZ {
 	private final String GIT_DIR = "/Users/kimseokjin/git/incubator-iotdb";
 	private final String FIX_COMMIT = "17f3a429a5c9a243abb61b078d9511c523c3954e";
 	private List<String> BFCList = new ArrayList<>();
-	
+
 	private static Git git;
 	private Repository repo;
-	
-	
+
 	public static void main(String[] args) {
-		new AgSZZ().run();	
+		new AgSZZ().run();
 	}
-	
+
 	private void run() {
 		try {
 			git = Git.open(new File(GIT_DIR));
 			repo = git.getRepository();
 			List<RevCommit> revs = GitUtils.getRevs(git);
 			BFCList.add(FIX_COMMIT);
-			
-			RevsWithPath revsWithPath = GitUtils.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs));
-			
+
+			RevsWithPath revsWithPath = GitUtils
+					.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs));
+
 			// Phase 1 : Build the annotation graph
+			final long startTime = System.currentTimeMillis();
+
 			AnnotationGraphBuilder agb = new AnnotationGraphBuilder();
 			AnnotationGraphModel agm = agb.buildAnnotationGraph(repo, revsWithPath);
-			
+
+			final long endTime = System.currentTimeMillis();
+			System.out.println("Building Annotation Graph takes " + (endTime - startTime));
+
 			// TEST
 //			Iterator<RevCommit> iter = agm.keySet().iterator();
 //			
@@ -76,21 +81,21 @@ public class AgSZZ {
 //				
 //				revCnt++;
 //			}
-			
+
 			// Phase 2 : Trace and collect BIC candidates
 			// Phase 3 : Filter out format changes, comments, etc among BIC candidates
 			Tracer tracer = new Tracer();
 			List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList);
-			
-			//TEST
+
+			// TEST
 			System.out.println("size: " + BILines.size());
-			for(Line line : BILines) {
-				System.out.println("BIC: "+line.getIdx());
-				System.out.println("Path: "+line.getPath());
-				System.out.println("Revision: "+line.getRev());
-				System.out.println("Content: "+line.getContent() +"\n");
-			}	
-			
+			for (Line line : BILines) {
+				System.out.println("BIC: " + line.getIdx());
+				System.out.println("Path: " + line.getPath());
+				System.out.println("Revision: " + line.getRev());
+				System.out.println("Content: " + line.getContent() + "\n");
+			}
+
 		} catch (IOException | GitAPIException | EmptyHunkTypeException e) {
 			e.printStackTrace();
 		}
