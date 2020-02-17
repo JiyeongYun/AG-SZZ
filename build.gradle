@@ -11,6 +11,9 @@ plugins {
     id 'java-library'
 }
 
+apply plugin:'application'
+mainClassName = 'hgu.csee.isel.alinew.szz.AgSZZ'
+
 repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
