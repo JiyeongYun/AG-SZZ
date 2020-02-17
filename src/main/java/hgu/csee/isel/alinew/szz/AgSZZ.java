@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
@@ -19,11 +20,10 @@ import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
 
 public class AgSZZ {
-	private final String GIT_DIR = "/Users/kimseokjin/git/incubator-iotdb";
+	private final String REMOTE_URL = "https://github.com/apache/incubator-iotdb.git";
 	private final String FIX_COMMIT = "17f3a429a5c9a243abb61b078d9511c523c3954e";
 	private List<String> BFCList = new ArrayList<>();
 
-	private static Git git;
 	private Repository repo;
 
 	public static void main(String[] args) {
@@ -32,7 +32,22 @@ public class AgSZZ {
 
 	private void run() {
 		try {
-			git = Git.open(new File(GIT_DIR));
+			// prepare a new folder for the cloned repository
+			File localPath = File.createTempFile("TestGitRepository", "");
+			if (!localPath.delete()) {
+				throw new IOException("Could not delete temporary file " + localPath);
+			}
+
+			// then clone
+			System.out.println("Cloning from " + REMOTE_URL + " to " + localPath);
+
+			Git git = Git.cloneRepository()
+						.setURI(REMOTE_URL).
+						setDirectory(localPath).
+						call();
+
+			System.out.println("Having repository: " + git.getRepository().getDirectory());
+
 			repo = git.getRepository();
 			List<RevCommit> revs = GitUtils.getRevs(git);
 			BFCList.add(FIX_COMMIT);
@@ -95,6 +110,9 @@ public class AgSZZ {
 				System.out.println("Revision: " + line.getRev());
 				System.out.println("Content: " + line.getContent() + "\n");
 			}
+
+			// clean up here to not keep using more and more disk-space for these samples
+			FileUtils.deleteDirectory(localPath);
 
 		} catch (IOException | GitAPIException | EmptyHunkTypeException e) {
 			e.printStackTrace();
