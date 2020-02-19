@@ -25,10 +25,8 @@ public class AnnotationGraphBuilder {
 
 	public AnnotationGraphModel buildAnnotationGraph(Repository repo, RevsWithPath revsWithPath, boolean debug)
 			throws IOException, EmptyHunkTypeException {
-		AnnotationGraphModel agm = new AnnotationGraphModel();
-
-		HashMap<String, ArrayList<Line>> childPathWithLines = new HashMap<String, ArrayList<Line>>();
-		HashMap<String, ArrayList<Line>> parentPathWithLines =  new HashMap<String, ArrayList<Line>>();
+		// Generate Annotation Graph
+		AnnotationGraphModel annotationGraph = new AnnotationGraphModel();
 		
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
@@ -48,6 +46,9 @@ public class AnnotationGraphBuilder {
 			String path = paths.next();
 
 			List<RevCommit> revs = revsWithPath.get(path);
+			
+			// Generate subAnnotationGraph
+			HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = new HashMap<RevCommit, ArrayList<Line>>();
 
 			ArrayList<Line> parentLineList = new ArrayList<>();
 			ArrayList<Line> childLineList = new ArrayList<>();
@@ -65,9 +66,6 @@ public class AnnotationGraphBuilder {
 				// Escape from the loop when there is no parent rev anymore
 				if (revs.indexOf(childRev) == revs.size() - 1)
 					break;
-				
-				childPathWithLines = new HashMap<String, ArrayList<Line>>();
-				parentPathWithLines = new HashMap<String, ArrayList<Line>>();
 
 				RevCommit parentRev = revs.get(revs.indexOf(childRev) + 1);
 
@@ -241,24 +239,23 @@ public class AnnotationGraphBuilder {
 
 					childIdx++;
 				}
-
-				// make HashMap<path, childLineList> and HashMap<path, parentList>
-				childPathWithLines.put(path, childLineList);
-				parentPathWithLines.put(path, parentLineList);
-
-				// put subgraph into graph(i.e. AnnotationGraphModel)
-				agm.put(childRev, childPathWithLines);
-				agm.put(parentRev, parentPathWithLines);
+				
+				// put lists of line corresponding to commit into subAG
+				subAnnotationGraph.put(parentRev, parentLineList);
+				subAnnotationGraph.put(childRev, childLineList);
 
 				childLineList = parentLineList;
 				parentLineList = new ArrayList<Line>();
 
 				revCnt++;
 			}
+			// put subAG corresponding to path into AG
+			annotationGraph.put(path, subAnnotationGraph);
+			
 			pathCnt++;
 		}
 
-		return agm;
+		return annotationGraph;
 	}
 
 	private boolean belongsToBothDELETEAndINSERT(ArrayList<Hunk> hunkList, int currHunkIdx, int currBeginOfChild) {

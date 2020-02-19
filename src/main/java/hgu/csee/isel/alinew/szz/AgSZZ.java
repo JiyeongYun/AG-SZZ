@@ -3,8 +3,6 @@ package hgu.csee.isel.alinew.szz;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -22,11 +20,8 @@ import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
 
 public class AgSZZ {
-//	private final String REMOTE_URL = "https://github.com/apache/incubator-iotdb.git";
 	private final String REMOTE_URL = "https://github.com/apache/incubator-iceberg.git";
-//	private final String FIX_COMMIT = "17f3a429a5c9a243abb61b078d9511c523c3954e";
 	private final String FIX_COMMIT = "1f100bdddca7e56a250b6ef93292d2433fefd880";
-//	private final String FIX_COMMIT = "77c822de728330e386f8a5a75a1b2143353aa425";
 	private List<String> BFCList = new ArrayList<>();
 	
 	private File localPath;

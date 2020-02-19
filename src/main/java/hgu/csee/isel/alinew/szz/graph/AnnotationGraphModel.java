@@ -7,6 +7,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import hgu.csee.isel.alinew.szz.model.Line;
 
-public class AnnotationGraphModel extends HashMap<RevCommit, HashMap<String,ArrayList<Line>>>{
+public class AnnotationGraphModel extends HashMap<String, HashMap<RevCommit,ArrayList<Line>>>{
 
 }

@@ -26,7 +26,7 @@ public class Tracer {
 
 	}
 
-	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel agm,
+	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel annotationGraph,
 			RevsWithPath revsWithPath, List<String> BFCList, boolean debug) throws IOException {
 		// Phase 1 : traverse all commits and find BFC
 		for (String bfc : BFCList) {
@@ -60,12 +60,12 @@ public class Tracer {
 						if (debug) {
 							System.out.println("\nChanged Path : " + path);
 
-							HashMap<String, ArrayList<Line>> subAnnotationGraphModel = agm.get(childRev);
-							System.out.println("Sub Graph contains " + path + "? " + subAnnotationGraphModel.containsKey(path));
+							HashMap<RevCommit, ArrayList<Line>> subAG = annotationGraph.get(path);
+							System.out.println("Sub Graph contains " + childRev.getName() + "? " + subAG.containsKey(childRev));
 						}
 
 						// get list of lines of BFC
-						ArrayList<Line> linesToTrace = agm.get(childRev).get(path);
+						ArrayList<Line> linesToTrace = annotationGraph.get(path).get(childRev);
 
 						// get preFixSource and fixSource
 						String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
@@ -102,8 +102,8 @@ public class Tracer {
 								List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
 								RevCommit changedPreBugFixRev = changeRevsWithPath
 										.get(changeRevsWithPath.indexOf(childRev) + 1);
-
-								linesToTrace = agm.get(changedPreBugFixRev).get(path);
+								
+								linesToTrace = annotationGraph.get(path).get(changedPreBugFixRev);
 
 								break;
 
