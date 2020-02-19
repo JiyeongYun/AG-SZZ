@@ -2,6 +2,7 @@ package hgu.csee.isel.alinew.szz.trace;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class Tracer {
 	}
 
 	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel agm,
-			RevsWithPath revsWithPath, List<String> BFCList) throws IOException {
+			RevsWithPath revsWithPath, List<String> BFCList, boolean debug) throws IOException {
 		// Phase 1 : traverse all commits and find BFC
 		for (String bfc : BFCList) {
 			for (RevCommit childRev : revs) {
@@ -36,6 +37,11 @@ public class Tracer {
 					if (parentRev == null) {
 						System.err.println("ERROR: Parent commit does not exist: " + childRev.name());
 						break;
+					}
+
+					if (debug) {
+						System.out.println("\nParent Revision : " + parentRev.getName());
+						System.out.println("Child Revision (BFC) : " + childRev.getName());
 					}
 
 					List<DiffEntry> diffs = GitUtils.diff(repo, parentRev.getTree(), childRev.getTree());
@@ -51,6 +57,13 @@ public class Tracer {
 					for (DiffEntry diff : diffs) {
 						String path = diff.getNewPath();
 
+						if (debug) {
+							System.out.println("\nChanged Path : " + path);
+
+							HashMap<String, ArrayList<Line>> subAnnotationGraphModel = agm.get(childRev);
+							System.out.println("Sub Graph contains " + path + "? " + subAnnotationGraphModel.containsKey(path));
+						}
+
 						// get list of lines of BFC
 						ArrayList<Line> linesToTrace = agm.get(childRev).get(path);
 
@@ -63,6 +76,15 @@ public class Tracer {
 						for (Edit edit : editList) {
 							int begin = -1;
 							int end = -1;
+
+							if (debug) {
+								System.out.println("\nHunk Info");
+								System.out.println("\tType : " + edit.getType());
+								System.out.println("\tbA : " + edit.getBeginA());
+								System.out.println("\teA : " + edit.getEndA());
+								System.out.println("\tbB : " + edit.getBeginB());
+								System.out.println("\teB : " + edit.getEndB());
+							}
 
 							switch (edit.getType()) {
 							case DELETE:
@@ -78,7 +100,8 @@ public class Tracer {
 								 * [][][][][][][][][][][][][][][]
 								 */
 								List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
-								RevCommit changedPreBugFixRev = changeRevsWithPath.get(changeRevsWithPath.indexOf(childRev) + 1);
+								RevCommit changedPreBugFixRev = changeRevsWithPath
+										.get(changeRevsWithPath.indexOf(childRev) + 1);
 
 								linesToTrace = agm.get(changedPreBugFixRev).get(path);
 
@@ -91,6 +114,23 @@ public class Tracer {
 
 							default:
 								break;
+							}
+
+							if (debug) {
+								System.out.println("\nTraced Line Info : " + begin);
+								System.out.println("Begin : " + begin);
+								System.out.println("End : " + end);
+
+								System.out.println("\nSize of lines to trace : " + linesToTrace.size());
+
+								for (Line line : linesToTrace) {
+
+									int lindIdx = line.getIdx();
+									if (lindIdx >= begin && lindIdx < end) {
+										System.out.println("\nLine Idx : " + line.getIdx());
+										System.out.println("Content : " + line.getContent());
+									}
+								}
 							}
 
 							// Phase 3 : trace

@@ -2,6 +2,7 @@ package hgu.csee.isel.alinew.szz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
@@ -114,7 +115,7 @@ public class GitUtils {
 //			List<RevCommit> list = revsInPath.get(path);
 //			
 //			for (RevCommit rev : list) {
-//				System.out.println("	rev: " + rev.getName());
+//				System.out.println("\trev: " + rev.getName());
 //			}
 //		}		
 

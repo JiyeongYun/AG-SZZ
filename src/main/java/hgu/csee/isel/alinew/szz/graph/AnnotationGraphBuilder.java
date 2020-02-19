@@ -23,13 +23,13 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AnnotationGraphBuilder {
 
-	public AnnotationGraphModel buildAnnotationGraph(Repository repo, RevsWithPath revsWithPath)
+	public AnnotationGraphModel buildAnnotationGraph(Repository repo, RevsWithPath revsWithPath, boolean debug)
 			throws IOException, EmptyHunkTypeException {
 		AnnotationGraphModel agm = new AnnotationGraphModel();
 
-		HashMap<String, ArrayList<Line>> childPathWithLines;
-		HashMap<String, ArrayList<Line>> parentPathWithLines;
-
+		HashMap<String, ArrayList<Line>> childPathWithLines = new HashMap<String, ArrayList<Line>>();
+		HashMap<String, ArrayList<Line>> parentPathWithLines =  new HashMap<String, ArrayList<Line>>();
+		
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
 		Line childLine;
@@ -38,32 +38,34 @@ public class AnnotationGraphBuilder {
 
 		// traverse all paths in the repo
 		Iterator<String> paths = revsWithPath.keySet().iterator();
-		
+
 		Iterator<String> pathsForCalculatingSize = revsWithPath.keySet().iterator();
 		int numOfPaths = Iterators.size(pathsForCalculatingSize);
-		
-		int pathCnt = 0;
+
+		int pathCnt = 1;
 		while (paths.hasNext()) {
-			
+
 			String path = paths.next();
-		
+
 			List<RevCommit> revs = revsWithPath.get(path);
 
 			ArrayList<Line> parentLineList = new ArrayList<>();
 			ArrayList<Line> childLineList = new ArrayList<>();
 
-			int revCnt = 0;
+			int revCnt = 1;
 			for (RevCommit childRev : revs) {
 				// Logging
-				System.out.println("\nPaths : " + pathCnt + " / " + numOfPaths);
-				System.out.println("Revs : " + revCnt + " / " + revs.size());
-				System.out.println("\tPath : " + path);
-				System.out.println("\tRevision : " + childRev.getName() + "\n");
-				
+				if (!debug) {
+					System.out.println("\nPaths : " + pathCnt + " / " + numOfPaths);
+					System.out.println("Revs : " + revCnt + " / " + revs.size());
+					System.out.println("\tPath : " + path);
+					System.out.println("\tRevision : " + childRev.getName() + "\n");
+				}
+
 				// Escape from the loop when there is no parent rev anymore
 				if (revs.indexOf(childRev) == revs.size() - 1)
 					break;
-
+				
 				childPathWithLines = new HashMap<String, ArrayList<Line>>();
 				parentPathWithLines = new HashMap<String, ArrayList<Line>>();
 
@@ -72,10 +74,11 @@ public class AnnotationGraphBuilder {
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
 				String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path)).trim();
 
-				// TEST
-//				System.out.println("path : " + path);
-//				System.out.println("\tparent rev : " + parentRev.getName());
-//				System.out.println("\tchild rev : " + childRev.getName());
+				if (debug) {
+					System.out.println("path : " + path);
+					System.out.println("\tparent rev : " + parentRev.getName());
+					System.out.println("\tchild rev : " + childRev.getName());
+				}
 
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
@@ -84,15 +87,16 @@ public class AnnotationGraphBuilder {
 				if (revs.indexOf(childRev) == 0)
 					configureLineList(childLineList, path, childRev, childContent);
 
-				// TEST
-//				System.out.println("\nParent");
-//				for (int i = 0; i < parentLineList.size(); i++) {
-//					System.out.println(i + "th idx : " + parentLineList.get(i).getContent());
-//				}
-//				System.out.println("\nChild");
-//				for (int i = 0; i < childLineList.size(); i++) {
-//					System.out.println(i + "th idx : " + childLineList.get(i).getContent());
-//				}
+				if (debug) {
+					System.out.println("\nParent");
+					for (int i = 0; i < parentLineList.size(); i++) {
+						System.out.println(i + "th idx : " + parentLineList.get(i).getContent());
+					}
+					System.out.println("\nChild");
+					for (int i = 0; i < childLineList.size(); i++) {
+						System.out.println(i + "th idx : " + childLineList.get(i).getContent());
+					}
+				}
 
 				ArrayList<Hunk> hunkList = configureHunkList(GitUtils.getEditListFromDiff(parentContent, childContent));
 
@@ -105,17 +109,19 @@ public class AnnotationGraphBuilder {
 
 					childLine = childLineList.get(childIdx);
 
-					// TEST
-//					System.out.println("\nHunk Rate : " + (hunkIdx + 1) + " / " + hunkList.size());
-//					System.out.println("Child Index Rate : " + childIdx + " / " + (childLineList.size() - 1));
-//					System.out.println("Offset : " + offset);
+					if (debug) {
+						System.out.println("\nHunk Rate : " + (hunkIdx + 1) + " / " + hunkList.size());
+						System.out.println("Child Index Rate : " + childIdx + " / " + (childLineList.size() - 1));
+						System.out.println("Offset : " + offset);
+					}
 
 					// Case 1 - when there is no hunk anymore
 					if (hunkList.size() <= hunkIdx) {
-						// TEST
-//						System.out.println("Connected parent index : " + (childIdx + offset) + " / "
-//								+ (parentLineList.size() - 1));
-//						System.out.println("No Hunk anymore\n");
+						if (debug) {
+							System.out.println("Connected parent index : " + (childIdx + offset) + " / "
+									+ (parentLineList.size() - 1));
+							System.out.println("No Hunk anymore\n");
+						}
 						childLine.setLineType(LineType.CONTEXT);
 
 						mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
@@ -129,20 +135,22 @@ public class AnnotationGraphBuilder {
 					endOfChild = hunk.getEndOfChild();
 					hunkType = hunk.getHunkType();
 
-					// TEST
-//					System.out.println("Hunk Type : " + hunk.getHunkType());
-//					System.out.println("bA : " + hunk.getBeginOfParent());
-//					System.out.println("eA : " + hunk.getEndOfParent());
-//					System.out.println("bB : " + hunk.getBeginOfChild());
-//					System.out.println("eB : " + hunk.getEndOfChild());
+					if (debug) {
+						System.out.println("Hunk Type : " + hunk.getHunkType());
+						System.out.println("bA : " + hunk.getBeginOfParent());
+						System.out.println("eA : " + hunk.getEndOfParent());
+						System.out.println("bB : " + hunk.getBeginOfChild());
+						System.out.println("eB : " + hunk.getEndOfChild());
+					}
 
 					// Case 2 - child index is out of hunk range
 					if (childIdx < beginOfChild) {
-						// TEST
-//						System.out.println("Connected parent index : " + (childIdx + offset) + " / "
-//								+ (parentLineList.size() - 1));
-//						System.out.println("Out of Hunk range\n");
+						if (debug) {
+							System.out.println("Connected parent index : " + (childIdx + offset) + " / "
+									+ (parentLineList.size() - 1));
+							System.out.println("Out of Hunk range\n");
 
+						}
 						childLine.setLineType(LineType.CONTEXT);
 						mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
 
@@ -151,9 +159,10 @@ public class AnnotationGraphBuilder {
 					else {
 						switch (hunkType) {
 						case "INSERT":
-							// TEST
-//							System.out.println("INSERT\n");
-							
+							if (debug) {
+								System.out.println("INSERT\n");
+							}
+
 							// When childIdx is the last index in hunk, increment hunk index
 							if (childIdx == endOfChild - 1)
 								hunkIdx++;
@@ -165,8 +174,9 @@ public class AnnotationGraphBuilder {
 							break;
 
 						case "REPLACE":
-							// TEST
-//							System.out.println("REPLACE\n");
+							if (debug) {
+								System.out.println("REPLACE\n");
+							}
 
 							// When childIdx is the last index in hunk, update offset and increment hunk
 							// index
@@ -194,31 +204,33 @@ public class AnnotationGraphBuilder {
 							// If the last child line is in DELETE, it maps with nothing
 							if (childIdx == childLineList.size() - 1)
 								break;
-							
+
 							// If the begin of child belongs to both DELETE and INSERT
-							if(belongsToBothDELETEAndINSERT(hunkList, hunkIdx, beginOfChild)) {
+							if (belongsToBothDELETEAndINSERT(hunkList, hunkIdx, beginOfChild)) {
 								offset += hunk.getRangeOfParent() - 1;
-								
+
 								childLine.setLineType(LineType.INSERT);
 								hunkIdx++;
-								
-								// TEST
-//								System.out.println("INSERT\n");
-								
+
+								if (debug) {
+									System.out.println("INSERT\n");
+								}
+
 								break;
 							}
-							
+
 							offset += hunk.getRangeOfParent();
 
 							childLine.setLineType(LineType.CONTEXT);
 							mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
 
 							hunkIdx++;
-							
-							// TEST
-//							System.out.println("Connected parent index : " + (childIdx + offset) + " / "
-//									+ (parentLineList.size() - 1));
-//							System.out.println("DELETE\n");
+
+							if (debug) {
+								System.out.println("Connected parent index : " + (childIdx + offset) + " / "
+										+ (parentLineList.size() - 1));
+								System.out.println("DELETE\n");
+							}
 
 							break;
 
@@ -230,25 +242,6 @@ public class AnnotationGraphBuilder {
 					childIdx++;
 				}
 
-				// TEST
-//				for (Line line : childLineList) {
-//					System.out.println("path: " + line.getPath());
-//					System.out.println("rev: " + line.getRev());
-//					System.out.println("content : " + line.getContent());
-//					System.out.println("curr line idx: " + line.getIdx());
-//					System.out.println("lineType: " + line.getLineType());
-//
-//					List<Line> ancestors = line.getAncestors();
-//
-//					for (Line ancestor : ancestors) {
-//						System.out.println("\tparent rev: " + ancestor.getRev());
-//						System.out.println("\tparent content : " + ancestor.getContent());
-//						System.out.println("\tparent idx: " + ancestor.getIdx());
-//					}
-//
-//					System.out.println("\n\n");
-//				}
-
 				// make HashMap<path, childLineList> and HashMap<path, parentList>
 				childPathWithLines.put(path, childLineList);
 				parentPathWithLines.put(path, parentLineList);
@@ -259,27 +252,27 @@ public class AnnotationGraphBuilder {
 
 				childLineList = parentLineList;
 				parentLineList = new ArrayList<Line>();
-				
-				revCnt ++;
-			} // end of for-each
-			pathCnt ++;
-		} // end of while
+
+				revCnt++;
+			}
+			pathCnt++;
+		}
 
 		return agm;
 	}
-	
+
 	private boolean belongsToBothDELETEAndINSERT(ArrayList<Hunk> hunkList, int currHunkIdx, int currBeginOfChild) {
 		int nextHunkIdx = currHunkIdx + 1;
-		
-		if(nextHunkIdx < hunkList.size()) {
+
+		if (nextHunkIdx < hunkList.size()) {
 			String nextHunkType = hunkList.get(nextHunkIdx).getHunkType();
 			int nextBeginOfChild = hunkList.get(nextHunkIdx).getBeginOfChild();
-			
-			if(nextHunkType.equals("INSERT") && currBeginOfChild == nextBeginOfChild) {
+
+			if (nextHunkType.equals("INSERT") && currBeginOfChild == nextBeginOfChild) {
 				return true;
 			}
 		}
-	
+
 		return false;
 	}
 

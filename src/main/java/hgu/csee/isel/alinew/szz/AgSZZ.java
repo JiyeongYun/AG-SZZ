@@ -3,6 +3,8 @@ package hgu.csee.isel.alinew.szz;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -20,20 +22,23 @@ import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
 
 public class AgSZZ {
-	private final String REMOTE_URL = "https://github.com/apache/incubator-iotdb.git";
-	private final String FIX_COMMIT = "17f3a429a5c9a243abb61b078d9511c523c3954e";
+//	private final String REMOTE_URL = "https://github.com/apache/incubator-iotdb.git";
+	private final String REMOTE_URL = "https://github.com/apache/incubator-iceberg.git";
+//	private final String FIX_COMMIT = "17f3a429a5c9a243abb61b078d9511c523c3954e";
+	private final String FIX_COMMIT = "1f100bdddca7e56a250b6ef93292d2433fefd880";
+//	private final String FIX_COMMIT = "77c822de728330e386f8a5a75a1b2143353aa425";
 	private List<String> BFCList = new ArrayList<>();
+	
+	private File localPath;
 
-	private Repository repo;
-
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		new AgSZZ().run();
 	}
 
-	private void run() {
+	private void run() throws IOException {
 		try {
 			// prepare a new folder for the cloned repository
-			File localPath = File.createTempFile("TestGitRepository", "");
+			localPath = File.createTempFile("TestGitRepository", "");
 			if (!localPath.delete()) {
 				throw new IOException("Could not delete temporary file " + localPath);
 			}
@@ -47,8 +52,8 @@ public class AgSZZ {
 						call();
 
 			System.out.println("Having repository: " + git.getRepository().getDirectory());
-
-			repo = git.getRepository();
+						
+			Repository repo = git.getRepository();
 			List<RevCommit> revs = GitUtils.getRevs(git);
 			BFCList.add(FIX_COMMIT);
 
@@ -59,39 +64,39 @@ public class AgSZZ {
 			final long startTime = System.currentTimeMillis();
 
 			AnnotationGraphBuilder agb = new AnnotationGraphBuilder();
-			AnnotationGraphModel agm = agb.buildAnnotationGraph(repo, revsWithPath);
+			AnnotationGraphModel agm = agb.buildAnnotationGraph(repo, revsWithPath, false);
 
 			final long endTime = System.currentTimeMillis();
-			System.out.println("Building Annotation Graph takes " + (endTime - startTime));
-
+			System.out.println("Building Annotation Graph takes " + (endTime - startTime) / 1000.0 + "s");
+			
 			// TEST
-//			Iterator<RevCommit> iter = agm.keySet().iterator();
+//			Iterator<RevCommit> commits = agm.keySet().iterator();
 //			
 //			int revCnt = 1;
-//			while(iter.hasNext()) {
+//			while(commits.hasNext()) {
 //				
-//				RevCommit rev = iter.next();
+//				RevCommit commit = commits.next();
 //				
 //				System.out.println("\nRev Count : " + revCnt + "=========================\n");
 //				
-//				System.out.println("rev : " + rev.getName());
-//				HashMap<String, ArrayList<Line>> map = agm.get(rev);
-//				Iterator<String> iter2 = map.keySet().iterator();
+//				System.out.println("rev : " + commit.getName());
+//				HashMap<String, ArrayList<Line>> subAnnotationGraph = agm.get(commit);
+//				Iterator<String> paths = subAnnotationGraph.keySet().iterator();
 //				
-//				while(iter2.hasNext()) {
-//					String path = iter2.next();
+//				while(paths.hasNext()) {
+//					String path = paths.next();
 //					System.out.println("path : " + path);
-//					ArrayList<Line> lines = map.get(path);
 //					
-//					for(Line l : lines) {
-//						System.out.println("\trev : " + l.getRev());
-//						System.out.println("\tpath : " + l.getPath() + "\n\n");
-//						
-//						System.out.println("content : " + l.getContent());
-//						System.out.println("index : " + l.getIdx());
-//						System.out.println("type : " + l.getLineType() + "\n") ;
-//					}
-//					
+////					ArrayList<Line> lines = subAnnotationGraph.get(path);
+////					
+////					for(Line l : lines) {
+////						System.out.println("\trev : " + l.getRev());
+////						System.out.println("\tpath : " + l.getPath() + "\n\n");
+////						
+////						System.out.println("content : " + l.getContent());
+////						System.out.println("index : " + l.getIdx());
+////						System.out.println("type : " + l.getLineType() + "\n") ;
+////					}
 //				}
 //				
 //				revCnt++;
@@ -100,7 +105,7 @@ public class AgSZZ {
 			// Phase 2 : Trace and collect BIC candidates
 			// Phase 3 : Filter out format changes, comments, etc among BIC candidates
 			Tracer tracer = new Tracer();
-			List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList);
+			List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList, true);
 
 			// TEST
 			System.out.println("size: " + BILines.size());
@@ -111,11 +116,12 @@ public class AgSZZ {
 				System.out.println("Content: " + line.getContent() + "\n");
 			}
 
-			// clean up here to not keep using more and more disk-space for these samples
-			FileUtils.deleteDirectory(localPath);
-
 		} catch (IOException | GitAPIException | EmptyHunkTypeException e) {
 			e.printStackTrace();
+		} finally {
+			// clean up here to not keep using more and more disk-space for these samples
+			FileUtils.deleteDirectory(localPath);
+			System.out.println("Clean up " + localPath);
 		}
 	}
 }
