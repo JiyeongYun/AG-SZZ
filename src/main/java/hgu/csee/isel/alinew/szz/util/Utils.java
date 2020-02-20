@@ -78,7 +78,7 @@ public class Utils {
 		
 		FileWriter writer = new FileWriter(savedFile);
 
-		CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("Path", "BIC", "Content", "Line Idx", "Committer", "Commit Date"));
+		CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("Path", "BIC", "Content", "Line Idx", "Committer", "Commit Date(GMT)"));
 
 		for (Line BICLine : BICLines) {
 			csvPrinter.printRecord(BICLine.getPath(), BICLine.getRev(), BICLine.getContent(), BICLine.getIdx(), BICLine.getCommiter(), BICLine.getCommitDate());
