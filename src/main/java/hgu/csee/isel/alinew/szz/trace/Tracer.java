@@ -21,11 +21,7 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 public class Tracer {
 	private static final int REFACTOIRNG_THRESHOLD = 10;
 	private HashSet<Line> BILines = new HashSet<>();
-
-	public Tracer() {
-
-	}
-
+	
 	public List<Line> collectBILines(Repository repo, List<RevCommit> revs, AnnotationGraphModel annotationGraph,
 			RevsWithPath revsWithPath, List<String> BFCList, boolean debug) throws IOException {
 		// Phase 1 : traverse all commits and find BFC
@@ -104,8 +100,7 @@ public class Tracer {
 								 * [][][][][][][][][][][][][][][]
 								 */
 								List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
-								RevCommit changedPreBugFixRev = changeRevsWithPath
-										.get(changeRevsWithPath.indexOf(childRev) + 1);
+								RevCommit changedPreBugFixRev = changeRevsWithPath.get(changeRevsWithPath.indexOf(childRev) + 1);
 								
 								linesToTrace = annotationGraph.get(path).get(changedPreBugFixRev);
 

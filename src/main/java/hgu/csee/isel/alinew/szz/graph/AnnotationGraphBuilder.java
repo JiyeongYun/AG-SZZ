@@ -27,7 +27,7 @@ public class AnnotationGraphBuilder {
 			throws IOException, EmptyHunkTypeException {
 		// Generate Annotation Graph
 		AnnotationGraphModel annotationGraph = new AnnotationGraphModel();
-		
+
 		int childIdx, hunkIdx, offset;
 		int beginOfChild, endOfChild;
 		Line childLine;
@@ -46,23 +46,18 @@ public class AnnotationGraphBuilder {
 			String path = paths.next();
 
 			List<RevCommit> revs = revsWithPath.get(path);
-			
+
 			// Generate subAnnotationGraph
 			HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = new HashMap<RevCommit, ArrayList<Line>>();
 
 			ArrayList<Line> parentLineList = new ArrayList<>();
 			ArrayList<Line> childLineList = new ArrayList<>();
 
-			int revCnt = 1;
-			for (RevCommit childRev : revs) {
-				// Logging
-				if (!debug) {
-					System.out.println("\nPaths : " + pathCnt + " / " + numOfPaths);
-					System.out.println("Revs : " + revCnt + " / " + revs.size());
-					System.out.println("\tPath : " + path);
-					System.out.println("\tRevision : " + childRev.getName() + "\n");
-				}
+			// Logging
+			System.out.println("\nIn progress (" + pathCnt + " / " + numOfPaths + ")");
+			System.out.println("\tBuilding Annotation Graph of " + path);
 
+			for (RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
 				if (revs.indexOf(childRev) == revs.size() - 1)
 					break;
@@ -239,19 +234,17 @@ public class AnnotationGraphBuilder {
 
 					childIdx++;
 				}
-				
+
 				// put lists of line corresponding to commit into subAG
 				subAnnotationGraph.put(parentRev, parentLineList);
 				subAnnotationGraph.put(childRev, childLineList);
 
 				childLineList = parentLineList;
 				parentLineList = new ArrayList<Line>();
-
-				revCnt++;
 			}
 			// put subAG corresponding to path into AG
 			annotationGraph.put(path, subAnnotationGraph);
-			
+
 			pathCnt++;
 		}
 
@@ -279,7 +272,10 @@ public class AnnotationGraphBuilder {
 		for (int i = 0; i < contentArr.length; i++) {
 			// make new Line
 			List<Line> ancestors = new ArrayList<>();
-			Line line = new Line(path, rev.getName(), contentArr[i], i, ancestors);
+			String committer = rev.getCommitterIdent().getName();
+			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev.getCommitTime());
+			
+			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, committer, StringDateTime);
 
 			lst.add(line);
 		}

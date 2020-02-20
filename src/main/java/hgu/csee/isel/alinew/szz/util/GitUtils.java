@@ -105,19 +105,6 @@ public class GitUtils {
 			}
 		}
 
-		// TEST
-//		Iterator<String> pathList = revsInPath.keySet().iterator();
-//
-//		while (pathList.hasNext()) {
-//			String path = pathList.next();
-//			System.out.println("path: " + path);
-//			List<RevCommit> list = revsInPath.get(path);
-//			
-//			for (RevCommit rev : list) {
-//				System.out.println("\trev: " + rev.getName());
-//			}
-//		}		
-
 		return revsInPath;
 	}
 

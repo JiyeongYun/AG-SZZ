@@ -10,13 +10,11 @@ public class Line {
 	private LineType lineType;
 	private List<Line> ancestors;
 	private boolean isFormatChange;
+	private String commiter;
+	private String commitDate;
 
-	public Line(String path, String rev, String content, int idx, List<Line> ancestors) {
-		this(path, rev, content, idx, LineType.CONTEXT, ancestors, false);
-	}
-
-	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors,
-			boolean isFormatChange) {
+	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors, 
+			boolean isFormatChange, String commiter, String commitDate) {
 		super();
 		this.path = path;
 		this.rev = rev;
@@ -25,6 +23,8 @@ public class Line {
 		this.lineType = lineType;
 		this.ancestors = ancestors;
 		this.isFormatChange = isFormatChange;
+		this.commiter = commiter;
+		this.commitDate = commitDate;
 	}
 
 	public String getPath() {
@@ -82,4 +82,21 @@ public class Line {
 	public void setFormatChange(boolean isFormatChange) {
 		this.isFormatChange = isFormatChange;
 	}
+
+	public String getCommiter() {
+		return commiter;
+	}
+
+	public void setCommiter(String commiter) {
+		this.commiter = commiter;
+	}
+
+	public String getCommitDate() {
+		return commitDate;
+	}
+
+	public void setCommitDate(String commitDate) {
+		this.commitDate = commitDate;
+	}
+	
 }
