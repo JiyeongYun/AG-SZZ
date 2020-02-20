@@ -2,7 +2,6 @@ package hgu.csee.isel.alinew.szz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
@@ -67,10 +66,10 @@ public class GitUtils {
 		List<PathRevision> paths = new ArrayList<>();
 
 		for (RevCommit commit : commits) {
-			// skip the last commit
-			if (commits.indexOf(commit) == commits.size() - 1)
-				break;
-
+			// Skip when there are no parents
+			if(commit.getParentCount() == 0)
+				continue;
+			
 			RevCommit parent = commit.getParent(0);
 			if (parent == null)
 				break;
@@ -81,8 +80,8 @@ public class GitUtils {
 			for (DiffEntry diff : diffs) {
 				String path = diff.getNewPath();
 
-				// Add only java file
-				if (path.endsWith(".java")) {
+				// contains only files which are java files and not test files 
+				if (path.endsWith(".java") && !path.contains("test")) {
 					paths.add(new PathRevision(path, commit));
 				}
 			}

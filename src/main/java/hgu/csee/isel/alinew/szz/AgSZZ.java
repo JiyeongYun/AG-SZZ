@@ -20,8 +20,8 @@ import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
 
 public class AgSZZ {
-	private final String REMOTE_URL = "https://github.com/apache/incubator-iceberg.git";
-	private final String FIX_COMMIT = "1f100bdddca7e56a250b6ef93292d2433fefd880";
+//	private final String REMOTE_URL = "https://github.com/apache/pulsar.git";
+	private final String FIX_COMMIT = "4264b8d42cead9c52dd90cf9656675acd7d9fa45";
 	private List<String> BFCList = new ArrayList<>();
 	
 	private File localPath;
@@ -32,21 +32,23 @@ public class AgSZZ {
 
 	private void run() throws IOException {
 		try {
-			// prepare a new folder for the cloned repository
-			localPath = File.createTempFile("TestGitRepository", "");
-			if (!localPath.delete()) {
-				throw new IOException("Could not delete temporary file " + localPath);
-			}
-
-			// then clone
-			System.out.println("Cloning from " + REMOTE_URL + " to " + localPath);
-
-			Git git = Git.cloneRepository()
-						.setURI(REMOTE_URL).
-						setDirectory(localPath).
-						call();
-
-			System.out.println("Having repository: " + git.getRepository().getDirectory());
+//			// prepare a new folder for the cloned repository
+//			localPath = File.createTempFile("TestGitRepository", "");
+//			if (!localPath.delete()) {
+//				throw new IOException("Could not delete temporary file " + localPath);
+//			}
+//
+//			// then clone
+//			System.out.println("Cloning from " + REMOTE_URL + " to " + localPath);
+//
+//			Git git = Git.cloneRepository()
+//						.setURI(REMOTE_URL).
+//						setDirectory(localPath).
+//						call();
+//
+//			System.out.println("Having repository: " + git.getRepository().getDirectory());
+			
+			Git git = Git.open(new File("/Users/kimseokjin/git/netbeans"));
 						
 			Repository repo = git.getRepository();
 			List<RevCommit> revs = GitUtils.getRevs(git);
@@ -103,7 +105,7 @@ public class AgSZZ {
 			List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList, true);
 
 			// TEST
-			System.out.println("size: " + BILines.size());
+			System.out.println("\nsize: " + BILines.size());
 			for (Line line : BILines) {
 				System.out.println("BIC: " + line.getIdx());
 				System.out.println("Path: " + line.getPath());
@@ -115,8 +117,8 @@ public class AgSZZ {
 			e.printStackTrace();
 		} finally {
 			// clean up here to not keep using more and more disk-space for these samples
-			FileUtils.deleteDirectory(localPath);
-			System.out.println("Clean up " + localPath);
+//			FileUtils.deleteDirectory(localPath);
+//			System.out.println("Clean up " + localPath);
 		}
 	}
 }

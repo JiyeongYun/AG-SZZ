@@ -56,6 +56,10 @@ public class Tracer {
 
 					for (DiffEntry diff : diffs) {
 						String path = diff.getNewPath();
+						
+						// Ignore test files
+						if(path.contains("test"))
+							continue;
 
 						if (debug) {
 							System.out.println("\nChanged Path : " + path);
