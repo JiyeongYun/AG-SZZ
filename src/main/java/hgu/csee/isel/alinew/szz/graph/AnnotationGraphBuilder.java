@@ -273,9 +273,10 @@ public class AnnotationGraphBuilder {
 			// make new Line
 			List<Line> ancestors = new ArrayList<>();
 			String committer = rev.getCommitterIdent().getName();
+			String author = rev.getAuthorIdent().getName();
 			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev.getCommitTime());
 			
-			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, committer, StringDateTime);
+			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, committer, author, StringDateTime);
 
 			lst.add(line);
 		}

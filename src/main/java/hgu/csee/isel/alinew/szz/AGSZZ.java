@@ -34,6 +34,7 @@ public class AGSZZ {
 
 	public void run() throws IOException {
 		try {
+			// Clone
 			final String REMOTE_URI = GIT_URL + ".git";
 			
 			// prepare a new folder for the cloned repository
@@ -41,8 +42,7 @@ public class AGSZZ {
 			if (!localPath.delete()) {
 				throw new IOException("Could not delete temporary file " + localPath);
 			}
-
-			// then clone
+			
 			System.out.println("\nCloning from " + REMOTE_URI + " to " + localPath);
 
 			Git git = Git.cloneRepository()
