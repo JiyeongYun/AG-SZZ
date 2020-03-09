@@ -3,7 +3,9 @@ package hgu.csee.isel.alinew.szz;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
@@ -52,12 +54,16 @@ public class AGSZZ {
 
 			System.out.println("Having repository: " + git.getRepository().getDirectory());
 
-
 			Repository repo = git.getRepository();
+			
 			List<RevCommit> revs = GitUtils.getRevs(git);
-
-			RevsWithPath revsWithPath = GitUtils.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs));
-
+			
+			List<RevCommit> bfcList = GitUtils.getBFCList(BFCList, revs);
+			
+			List<String> targetPaths = GitUtils.getTargetPaths(repo, bfcList);
+			
+			RevsWithPath revsWithPath = GitUtils.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs), targetPaths);
+			
 			// Phase 1 : Build the annotation graph
 			final long startBuildingTime = System.currentTimeMillis();
 
@@ -71,7 +77,8 @@ public class AGSZZ {
 			final long startTracingTime = System.currentTimeMillis();
 			
 			Tracer tracer = new Tracer();
-			List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList, debug);
+			//List<Line> BILines = tracer.collectBILines(repo, revs, agm, revsWithPath, BFCList, debug);
+			List<Line> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath, debug);
 			
 			final long endTracingTime = System.currentTimeMillis();
 			System.out.println("\nCollecting BICs takes " + (endTracingTime - startTracingTime) / 1000.0 + "s\n");

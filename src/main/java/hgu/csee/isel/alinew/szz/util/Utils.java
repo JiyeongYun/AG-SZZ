@@ -78,12 +78,12 @@ public class Utils {
 		
 		FileWriter writer = new FileWriter(savedFile);
 
-		CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("Path", "BIC", "Content", "Line Idx", "Committer", "Commit Date(GMT)"));
+		CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("Path", "BIC", "Content", "Line Idx", "Committer", "Author", "Commit Date(GMT)"));
 
 		for (Line BICLine : BICLines) {
-			csvPrinter.printRecord(BICLine.getPath(), BICLine.getRev(), BICLine.getContent(), BICLine.getIdx(), BICLine.getCommiter(), BICLine.getCommitDate());
+			csvPrinter.printRecord(BICLine.getPath(), BICLine.getRev(), BICLine.getContent(), BICLine.getIdx(), BICLine.getCommiter(), BICLine.getAuthor(), BICLine.getCommitDate());
 		}
 		
-		csvPrinter.flush();
+		csvPrinter.close();
 	}
 }

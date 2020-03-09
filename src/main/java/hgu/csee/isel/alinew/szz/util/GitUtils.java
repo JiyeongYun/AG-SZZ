@@ -67,9 +67,9 @@ public class GitUtils {
 
 		for (RevCommit commit : commits) {
 			// Skip when there are no parents
-			if(commit.getParentCount() == 0)
+			if (commit.getParentCount() == 0)
 				continue;
-			
+
 			RevCommit parent = commit.getParent(0);
 			if (parent == null)
 				break;
@@ -80,7 +80,7 @@ public class GitUtils {
 			for (DiffEntry diff : diffs) {
 				String path = diff.getNewPath();
 
-				// contains only files which are java files and not test files 
+				// contains only files which are java files and not test files
 				if (path.endsWith(".java") && !path.contains("test")) {
 					paths.add(new PathRevision(path, commit));
 				}
@@ -90,22 +90,28 @@ public class GitUtils {
 		return paths;
 	}
 
-	public static RevsWithPath collectRevsWithSpecificPath(List<PathRevision> pathRevisions) {
-		RevsWithPath revsInPath = new RevsWithPath();
+	public static RevsWithPath collectRevsWithSpecificPath(List<PathRevision> pathRevisions, List<String> targetPaths) {
+		RevsWithPath revsWithPath = new RevsWithPath();
 
 		for (PathRevision pr : pathRevisions) {
-			if (revsInPath.containsKey(pr.getPath())) {
-				List<RevCommit> lst = revsInPath.get(pr.getPath());
+			String path = pr.getPath();
+			
+			// Skip when the path is not a target
+			if(!targetPaths.contains(path))
+				continue;
+			
+			if (revsWithPath.containsKey(path)) {
+				List<RevCommit> lst = revsWithPath.get(path);
 				lst.add(pr.getCommit());
-				revsInPath.replace(pr.getPath(), lst);
+				revsWithPath.replace(path, lst);
 			} else {
 				List<RevCommit> lst = new ArrayList<>();
 				lst.add(pr.getCommit());
-				revsInPath.put(pr.getPath(), lst);
+				revsWithPath.put(path, lst);
 			}
 		}
 
-		return revsInPath;
+		return revsWithPath;
 	}
 
 	public static String fetchBlob(Repository repo, RevCommit commit, String path)
@@ -173,4 +179,42 @@ public class GitUtils {
 		return commits;
 	}
 
+	public static List<RevCommit> getBFCList(List<String> BFCList, List<RevCommit> revs) {
+		List<RevCommit> bfcList = new ArrayList<>();
+
+		for (String bfc : BFCList) {
+			for (RevCommit rev : revs) {
+				if (rev.getName().equals(bfc)) {
+					bfcList.add(rev);
+				}
+			}
+		}
+
+		return bfcList;
+	}
+	
+	public static List<String> getTargetPaths(Repository repo, List<RevCommit> BFCList) throws IOException{
+		List<String> targetPaths = new ArrayList<>();
+
+		for (RevCommit bfc : BFCList) {
+			// Skip when there are no parents
+			if (bfc.getParentCount() == 0)
+				continue;
+
+			RevCommit parent = bfc.getParent(0);
+			if (parent == null)
+				break;
+
+			List<DiffEntry> diffs = GitUtils.diff(repo, parent.getTree(), bfc.getTree());
+
+			// get changed paths
+			for (DiffEntry diff : diffs) {
+				String path = diff.getNewPath();
+
+				targetPaths.add(path);
+			}
+		}
+
+		return targetPaths;
+	}
 }
