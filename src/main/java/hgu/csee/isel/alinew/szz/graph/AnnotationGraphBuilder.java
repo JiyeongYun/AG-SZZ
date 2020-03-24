@@ -8,11 +8,8 @@ import java.util.List;
 
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.EditList;
-import org.eclipse.jgit.errors.LargeObjectException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-
-import com.google.common.collect.Iterators;
 
 import hgu.csee.isel.alinew.szz.AGSZZ;
 import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
