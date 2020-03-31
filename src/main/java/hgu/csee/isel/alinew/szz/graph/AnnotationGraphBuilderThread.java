@@ -79,7 +79,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			ArrayList<Line> childLineList = new ArrayList<>();
 
 			// Logging
-			System.out.println("\nIn progress (" + pathCnt + " / " + numOfPaths + ")");
+			System.out.println("\n" + Thread.currentThread().getName() + " In progress (" + pathCnt + " / " + numOfPaths + ")");
 			System.out.println("\tBuilding Annotation Graph of " + path);
 
 			for (RevCommit childRev : revs) {
