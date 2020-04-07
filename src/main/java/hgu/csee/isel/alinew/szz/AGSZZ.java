@@ -3,6 +3,7 @@ package hgu.csee.isel.alinew.szz;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -11,6 +12,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import hgu.csee.isel.alinew.szz.data.BICInfo;
 import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
@@ -75,11 +77,14 @@ public class AGSZZ {
 			final long startTracingTime = System.currentTimeMillis();
 			
 			Tracer tracer = new Tracer();
-			List<Line> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath, debug);
+			List<BICInfo> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath, debug);
 			
 			final long endTracingTime = System.currentTimeMillis();
 			System.out.println("\nCollecting BICs takes " + (endTracingTime - startTracingTime) / 1000.0 + "s\n");
 			
+			// Sort BICs in the order FixSha1, BISha1, BIContent, biLineIdx
+			Collections.sort(BILines);
+						
 			// Phase 3 : store outputs
 			Utils.storeOutputFile(GIT_URL, BILines);
 

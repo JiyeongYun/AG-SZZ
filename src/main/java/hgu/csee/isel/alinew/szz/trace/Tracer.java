@@ -17,18 +17,21 @@ import hgu.csee.isel.alinew.szz.model.Line;
 import hgu.csee.isel.alinew.szz.model.RevsWithPath;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
 import hgu.csee.isel.alinew.szz.util.Utils;
+import hgu.csee.isel.alinew.szz.data.BICInfo;
 
 public class Tracer {
 	private static final int REFACTOIRNG_THRESHOLD = 10;
 	private HashSet<Line> BILines = new HashSet<>();
+	private List<BICInfo> bicList = new ArrayList<>();
 
-	public List<Line> collectBILines(Repository repo, List<RevCommit> BFCList, AnnotationGraphModel annotationGraph,
+	public List<BICInfo> collectBILines(Repository repo, List<RevCommit> BFCList, AnnotationGraphModel annotationGraph,
 			RevsWithPath revsWithPath, boolean debug) throws IOException {
+
 		// Phase 1 : Find path and line index for tracing
 		for (RevCommit BFC : BFCList) {
-			if(BFC.getParentCount() == 0)
+			if (BFC.getParentCount() == 0)
 				continue;
-			
+
 			RevCommit parentRev = BFC.getParent(0); // Get BFC pre-commit (i.e. BFC~1 commit)
 			if (parentRev == null) {
 				System.err.println("ERROR: Parent commit does not exist: " + BFC.name());
@@ -56,10 +59,10 @@ public class Tracer {
 				// Ignore non-java file and test file
 				if (!path.endsWith(".java") || path.contains("test"))
 					continue;
-				
+
 				if (debug) {
 					System.out.println("\nChanged Path : " + path);
-					System.out.println("Graph contains " + path + "? " + annotationGraph.containsKey(path) );
+					System.out.println("Graph contains " + path + "? " + annotationGraph.containsKey(path));
 
 					HashMap<RevCommit, ArrayList<Line>> subAG = annotationGraph.get(path);
 					System.out.println("Sub Graph contains " + BFC.getName() + "? " + subAG.containsKey(BFC));
@@ -97,8 +100,7 @@ public class Tracer {
 						 * 
 						 * [REMARK] This list is sorted in chronological order.
 						 * 
-						 * Latest ------------> Oldest 
-						 * [][][][][][][][][][][][][][][]
+						 * Latest ------------> Oldest [][][][][][][][][][][][][][][]
 						 */
 						List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
 						RevCommit changedPreBugFixRev = changeRevsWithPath.get(changeRevsWithPath.indexOf(BFC) + 1);
@@ -133,6 +135,8 @@ public class Tracer {
 						}
 					}
 
+					
+
 					// Phase 2 : trace
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
@@ -141,15 +145,25 @@ public class Tracer {
 						}
 					}
 				}
+				
+				String fixSha1 = BFC.name() + "";
+				String fixDate = Utils.getStringDateTimeFromCommitTime(BFC);
+				
+				for(Line line: BILines) {
+					BICInfo bicInfo = new BICInfo(fixSha1, path, fixDate, line);
+					bicList.add(bicInfo);
+				}
+				
+				BILines.clear();
 			}
 		}
+		
 
-		List<Line> BILinesWithoutDuplicates = new ArrayList<>(BILines);
-
-		return BILinesWithoutDuplicates;
+		return bicList;
 	}
 
 	public void trace(Line line) {
+		
 		for (Line ancestor : line.getAncestors()) {
 			// neither whitespace nor format change is the Bug Introducing Lines
 			if (!Utils.isWhitespace(ancestor.getContent())) {
@@ -157,6 +171,8 @@ public class Tracer {
 					trace(ancestor);
 				} else {
 					BILines.add(ancestor);
+//					BICInfo bicInfo = new BICInfo(fixSha1, path, fixDate, ancestor);
+//					BILines.add(bicInfo);
 				}
 			}
 		}

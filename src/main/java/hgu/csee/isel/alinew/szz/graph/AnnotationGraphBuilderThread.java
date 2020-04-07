@@ -299,7 +299,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			List<Line> ancestors = new ArrayList<>();
 			String committer = rev.getCommitterIdent().getName();
 			String author = rev.getAuthorIdent().getName();
-			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev.getCommitTime());
+			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev);
 			
 			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, committer, author, StringDateTime);
 

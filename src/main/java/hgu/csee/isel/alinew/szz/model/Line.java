@@ -13,7 +13,7 @@ public class Line {
 	private String commiter;
 	private String author;
 	private String commitDate;
-	
+
 	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors,
 			boolean isFormatChange, String commiter, String author, String commitDate) {
 		super();
@@ -108,5 +108,5 @@ public class Line {
 	public void setCommitDate(String commitDate) {
 		this.commitDate = commitDate;
 	}
-	
+
 }

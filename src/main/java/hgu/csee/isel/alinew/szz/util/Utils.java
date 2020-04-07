@@ -11,7 +11,9 @@ import java.util.TimeZone;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.eclipse.jdt.core.dom.Comment;
+import org.eclipse.jgit.revwalk.RevCommit;
 
+import hgu.csee.isel.alinew.szz.data.BICInfo;
 import hgu.csee.isel.alinew.szz.model.Line;
 
 public class Utils {
@@ -57,9 +59,9 @@ public class Utils {
 		return code;
 	}
 
-	public static String getStringDateTimeFromCommitTime(int commitTime) {
+	public static String getStringDateTimeFromCommitTime(RevCommit commit) {
 		SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date commitDate = new Date(commitTime * 1000L);
+		Date commitDate = commit.getAuthorIdent().getWhen();
 
 		TimeZone GMT = TimeZone.getTimeZone("GMT");
 		ft.setTimeZone(GMT);
@@ -67,23 +69,26 @@ public class Utils {
 		return ft.format(commitDate);
 	}
 
-	public static void storeOutputFile(String GIT_URL, List<Line> BICLines) throws IOException {
+	public static void storeOutputFile(String GIT_URL, List<BICInfo> BICLines) throws IOException {
 		// Set file name
 		String[] arr = GIT_URL.split("/");
 		String projName = arr[arr.length - 1];
 		String fName = System.getProperty("user.dir") + File.separator + "results" + File.separator + projName + ".csv";
-		
+
 		File savedFile = new File(fName);
 		savedFile.getParentFile().mkdirs();
-		
+
 		FileWriter writer = new FileWriter(savedFile);
 
-		CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("Path", "BIC", "Content", "Line Idx", "Committer", "Author", "Commit Date(GMT)"));
+		CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("BISha1", "BIPath", "FixSha1",
+				"BIDate", "FixDate", "biLineIdx", "BIContent", "Commiter", "Author"));
 
-		for (Line BICLine : BICLines) {
-			csvPrinter.printRecord(BICLine.getPath(), BICLine.getRev(), BICLine.getContent(), BICLine.getIdx(), BICLine.getCommiter(), BICLine.getAuthor(), BICLine.getCommitDate());
+		for (BICInfo BICInfo : BICLines) {
+			csvPrinter.printRecord(BICInfo.getBISha1(), BICInfo.getBiPath(), BICInfo.getFixSha1(), BICInfo.getBIDate(),
+					BICInfo.getFixDate(), BICInfo.getBiLineIdx(), BICInfo.getBIContent(), BICInfo.getCommiter(),
+					BICInfo.getAuthor());
 		}
-		
+
 		csvPrinter.close();
 	}
 }
