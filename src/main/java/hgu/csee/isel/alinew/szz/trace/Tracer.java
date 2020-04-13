@@ -165,14 +165,12 @@ public class Tracer {
 	public void trace(Line line) {
 		
 		for (Line ancestor : line.getAncestors()) {
-			// neither whitespace nor format change is the Bug Introducing Lines
+			// Lines that are not white space, format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
-				if (ancestor.isFormatChange()) {
+				if (ancestor.isFormatChange() || !ancestor.isWithinHunk()) {
 					trace(ancestor);
 				} else {
 					BILines.add(ancestor);
-//					BICInfo bicInfo = new BICInfo(fixSha1, path, fixDate, ancestor);
-//					BILines.add(bicInfo);
 				}
 			}
 		}

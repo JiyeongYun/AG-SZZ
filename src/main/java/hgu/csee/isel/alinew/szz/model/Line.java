@@ -10,12 +10,13 @@ public class Line {
 	private LineType lineType;
 	private List<Line> ancestors;
 	private boolean isFormatChange;
+	private boolean isWithinHunk;
 	private String commiter;
 	private String author;
 	private String commitDate;
 
 	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors,
-			boolean isFormatChange, String commiter, String author, String commitDate) {
+			boolean isFormatChange, boolean isWithinHunk, String commiter, String author, String commitDate) {
 		super();
 		this.path = path;
 		this.rev = rev;
@@ -24,6 +25,7 @@ public class Line {
 		this.lineType = lineType;
 		this.ancestors = ancestors;
 		this.isFormatChange = isFormatChange;
+		this.isWithinHunk = isWithinHunk;
 		this.commiter = commiter;
 		this.author = author;
 		this.commitDate = commitDate;
@@ -83,6 +85,14 @@ public class Line {
 
 	public void setFormatChange(boolean isFormatChange) {
 		this.isFormatChange = isFormatChange;
+	}
+
+	public boolean isWithinHunk() {
+		return isWithinHunk;
+	}
+
+	public void setWithinHunk(boolean isWithinHunk) {
+		this.isWithinHunk = isWithinHunk;
 	}
 
 	public String getCommiter() {

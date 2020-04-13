@@ -186,6 +186,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 								hunkIdx++;
 
 							childLine.setLineType(LineType.INSERT);
+							childLine.setWithinHunk(true);
 
 							offset--;
 
@@ -214,6 +215,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 								childLine.setFormatChange(true);
 
 							childLine.setLineType(LineType.REPLACE);
+							childLine.setWithinHunk(true);
 							mapChildLineWithAncestors(hunk, parentLineList, childLine);
 
 							break;
@@ -228,6 +230,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 								offset += hunk.getRangeOfParent() - 1;
 
 								childLine.setLineType(LineType.INSERT);
+								childLine.setWithinHunk(true);
 								hunkIdx++;
 
 								if (debug) {
@@ -240,6 +243,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							offset += hunk.getRangeOfParent();
 
 							childLine.setLineType(LineType.CONTEXT);
+							childLine.setWithinHunk(true);
 							mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
 
 							hunkIdx++;
@@ -301,7 +305,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			String author = rev.getAuthorIdent().getName();
 			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev);
 			
-			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, committer, author, StringDateTime);
+			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, false, committer, author, StringDateTime);
 
 			lst.add(line);
 		}
