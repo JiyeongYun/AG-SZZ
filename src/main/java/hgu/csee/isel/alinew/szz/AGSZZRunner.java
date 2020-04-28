@@ -15,7 +15,7 @@ import org.apache.commons.cli.ParseException;
 
 public class AGSZZRunner {
 	private String GIT_URL;
-	private List<String> bugFixCommits = new ArrayList<>();
+	private String issueKeyFilePath;
 	private boolean debug;
 	private boolean help;
 
@@ -42,10 +42,9 @@ public class AGSZZRunner {
 								.build());
 
 		options.addOption(Option.builder("b")
-								.longOpt("bfc")
-								.desc("Bug Fix Commits")
-								.hasArgs()
-								.valueSeparator(' ') // delim
+								.longOpt("bugFix")
+								.desc("Path of file that has bug fix issue keys")
+								.hasArg()
 								.required(true)
 								.build());
 
@@ -72,7 +71,7 @@ public class AGSZZRunner {
 			cmd = parser.parse(options, args);
 
 			GIT_URL = cmd.getOptionValue('u');
-			Collections.addAll(bugFixCommits, cmd.getOptionValues('b'));
+			issueKeyFilePath = cmd.getOptionValue('b');
 			debug = cmd.hasOption('d');
 			help = cmd.hasOption('h');
 
@@ -106,11 +105,10 @@ public class AGSZZRunner {
 			// Input Info
 			System.out.println("\nInput Info");
 			System.out.println("\tGIT URL : " + GIT_URL);
-			for(String bfc : bugFixCommits) 
-				System.out.println("\tBFC : " + bfc);
+			System.out.println("\tIssue Key File path : " + issueKeyFilePath);
 			System.out.println("\tDebug mode : " + debug);
 			
-			AGSZZ agSZZ = new AGSZZ(GIT_URL, bugFixCommits, debug);
+			AGSZZ agSZZ = new AGSZZ(GIT_URL, issueKeyFilePath, debug);
 			agSZZ.run();
 
 		}

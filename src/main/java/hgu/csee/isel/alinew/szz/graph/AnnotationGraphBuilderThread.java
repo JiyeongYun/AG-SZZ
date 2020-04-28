@@ -71,6 +71,9 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			String path = paths.next();
 
 			List<RevCommit> revs = revsWithPath.get(path);
+			
+			// Skip building AG when the number of paths is 1 as it's not appropriate
+			if(revs.size() == 1) continue;
 
 			// Generate subAnnotationGraph
 			HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = new HashMap<RevCommit, ArrayList<Line>>();

@@ -2,7 +2,9 @@ package hgu.csee.isel.alinew.szz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -95,11 +97,11 @@ public class GitUtils {
 
 		for (PathRevision pr : pathRevisions) {
 			String path = pr.getPath();
-			
+
 			// Skip when the path is not a target
-			if(!targetPaths.contains(path))
+			if (!targetPaths.contains(path))
 				continue;
-			
+
 			if (revsWithPath.containsKey(path)) {
 				List<RevCommit> lst = revsWithPath.get(path);
 				lst.add(pr.getCommit());
@@ -110,7 +112,7 @@ public class GitUtils {
 				revsWithPath.put(path, lst);
 			}
 		}
-
+		
 		return revsWithPath;
 	}
 
@@ -179,21 +181,28 @@ public class GitUtils {
 		return commits;
 	}
 
-	public static List<RevCommit> getBFCList(List<String> BFCList, List<RevCommit> revs) {
-		List<RevCommit> bfcList = new ArrayList<>();
+	public static List<RevCommit> getBFCList(List<String> issueKeys, List<RevCommit> revs) {
+		List<RevCommit> BFCList = new ArrayList<RevCommit>();
 
-		for (String bfc : BFCList) {
+		for (String issueKey : issueKeys) {
+			ArrayList<RevCommit> temp = new ArrayList<RevCommit>();
+
 			for (RevCommit rev : revs) {
-				if (rev.getName().equals(bfc)) {
-					bfcList.add(rev);
-				}
+				if (rev.getShortMessage().contains(issueKey))
+					temp.add(rev);
+
 			}
+
+			// A BFC is a commit that is mentioned exactly once for the corresponding issue
+			// key in the entire commit.
+			if (temp.size() == 1)
+				BFCList.addAll(temp);
 		}
 
-		return bfcList;
+		return BFCList;
 	}
-	
-	public static List<String> getTargetPaths(Repository repo, List<RevCommit> BFCList) throws IOException{
+
+	public static List<String> getTargetPaths(Repository repo, List<RevCommit> BFCList) throws IOException {
 		List<String> targetPaths = new ArrayList<>();
 
 		for (RevCommit bfc : BFCList) {
@@ -210,11 +219,15 @@ public class GitUtils {
 			// get changed paths
 			for (DiffEntry diff : diffs) {
 				String path = diff.getNewPath();
-
-				targetPaths.add(path);
+				
+				// contains only files which are java files and not test files
+				if (path.endsWith(".java") && !path.contains("test")) {
+					targetPaths.add(path);
+				}
 			}
 		}
 
 		return targetPaths;
 	}
+
 }

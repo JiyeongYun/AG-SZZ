@@ -2,7 +2,9 @@ package hgu.csee.isel.alinew.szz;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -13,10 +15,8 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import hgu.csee.isel.alinew.szz.data.BICInfo;
-import hgu.csee.isel.alinew.szz.exception.EmptyHunkTypeException;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphBuilder;
 import hgu.csee.isel.alinew.szz.graph.AnnotationGraphModel;
-import hgu.csee.isel.alinew.szz.model.Line;
 import hgu.csee.isel.alinew.szz.model.RevsWithPath;
 import hgu.csee.isel.alinew.szz.trace.Tracer;
 import hgu.csee.isel.alinew.szz.util.GitUtils;
@@ -24,13 +24,13 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 
 public class AGSZZ {
 	private String GIT_URL;
-	private List<String> BFCList = new ArrayList<>();
+	private String issueKeyFilePath;
 	private boolean debug;
 	private File localPath;
 
-	public AGSZZ(String gIT_URL, List<String> bFCList, boolean debug) {
-		this.GIT_URL = gIT_URL;
-		this.BFCList = bFCList;
+	public AGSZZ(String gIT_URL, String issueKeyFilePath, boolean debug) {
+		GIT_URL = gIT_URL;
+		this.issueKeyFilePath = issueKeyFilePath;
 		this.debug = debug;
 	}
 
@@ -56,12 +56,15 @@ public class AGSZZ {
 
 			Repository repo = git.getRepository();
 			
+			// Pre-step for collecting BFCs
 			List<RevCommit> revs = GitUtils.getRevs(git);
+			List<String> issueKeys = Files.readAllLines(Paths.get(issueKeyFilePath), StandardCharsets.UTF_8);
 			
-			List<RevCommit> bfcList = GitUtils.getBFCList(BFCList, revs);
+			// Colleting BFCs
+			List<RevCommit> bfcList = GitUtils.getBFCList(issueKeys, revs);
 			
+			// Pre-step for building annotation graph
 			List<String> targetPaths = GitUtils.getTargetPaths(repo, bfcList);
-			
 			RevsWithPath revsWithPath = GitUtils.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs), targetPaths);
 			
 			// Phase 1 : Build the annotation graph

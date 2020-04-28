@@ -63,13 +63,24 @@ public class Tracer {
 				if (debug) {
 					System.out.println("\nChanged Path : " + path);
 					System.out.println("Graph contains " + path + "? " + annotationGraph.containsKey(path));
+					
 
 					HashMap<RevCommit, ArrayList<Line>> subAG = annotationGraph.get(path);
-					System.out.println("Sub Graph contains " + BFC.getName() + "? " + subAG.containsKey(BFC));
+					if(subAG != null) {
+						System.out.println("Sub Graph contains " + BFC.getName() + "? " + subAG.containsKey(BFC));	
+					}
 				}
 
+				// get subAnnotationGraph
+				HashMap<RevCommit,ArrayList<Line>> subAnnotationGraph = annotationGraph.get(path);
+				
+				// Skip when subAnnotationGraph is null, because building AG could be omitted for some reasons.
+				// For example, building AG is omitted when there are only one path. See AnnotationGraphBuilderThread.java 
+				if(subAnnotationGraph == null) continue;
+				
 				// get list of lines of BFC
-				ArrayList<Line> linesToTrace = annotationGraph.get(path).get(BFC);
+				ArrayList<Line> linesToTrace = subAnnotationGraph.get(BFC);
+			
 
 				// get preFixSource and fixSource
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
@@ -100,7 +111,8 @@ public class Tracer {
 						 * 
 						 * [REMARK] This list is sorted in chronological order.
 						 * 
-						 * Latest ------------> Oldest [][][][][][][][][][][][][][][]
+						 * Latest ------------> Oldest 
+						 * [][][][][][][][][][][][][][][]
 						 */
 						List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
 						RevCommit changedPreBugFixRev = changeRevsWithPath.get(changeRevsWithPath.indexOf(BFC) + 1);
@@ -112,6 +124,8 @@ public class Tracer {
 					case REPLACE:
 						begin = edit.getBeginB();
 						end = edit.getEndB();
+
+						linesToTrace = annotationGraph.get(path).get(BFC);
 						break;
 
 					default:
@@ -135,8 +149,6 @@ public class Tracer {
 						}
 					}
 
-					
-
 					// Phase 2 : trace
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
@@ -144,26 +156,26 @@ public class Tracer {
 							trace(line);
 						}
 					}
+
 				}
-				
+
 				String fixSha1 = BFC.name() + "";
 				String fixDate = Utils.getStringDateTimeFromCommitTime(BFC);
-				
-				for(Line line: BILines) {
+
+				for (Line line : BILines) {
 					BICInfo bicInfo = new BICInfo(fixSha1, path, fixDate, line);
 					bicList.add(bicInfo);
 				}
-				
+
 				BILines.clear();
 			}
 		}
-		
 
 		return bicList;
 	}
 
 	public void trace(Line line) {
-		
+
 		for (Line ancestor : line.getAncestors()) {
 			// Lines that are not white space, format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
