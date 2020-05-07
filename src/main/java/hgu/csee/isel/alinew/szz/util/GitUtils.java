@@ -185,18 +185,9 @@ public class GitUtils {
 		List<RevCommit> BFCList = new ArrayList<RevCommit>();
 
 		for (String issueKey : issueKeys) {
-			ArrayList<RevCommit> temp = new ArrayList<RevCommit>();
+			for (RevCommit rev : revs) 
+				if (rev.getFullMessage().contains(issueKey)) BFCList.add(rev); 
 
-			for (RevCommit rev : revs) {
-				if (rev.getShortMessage().contains(issueKey))
-					temp.add(rev);
-
-			}
-
-			// A BFC is a commit that is mentioned exactly once for the corresponding issue
-			// key in the entire commit.
-			if (temp.size() == 1)
-				BFCList.addAll(temp);
 		}
 
 		return BFCList;
