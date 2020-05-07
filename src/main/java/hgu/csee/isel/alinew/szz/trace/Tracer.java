@@ -20,9 +20,15 @@ import hgu.csee.isel.alinew.szz.util.Utils;
 import hgu.csee.isel.alinew.szz.data.BICInfo;
 
 public class Tracer {
+	private boolean analysis;
 	private static final int REFACTOIRNG_THRESHOLD = 10;
 	private HashSet<Line> BILines = new HashSet<>();
 	private List<BICInfo> bicList = new ArrayList<>();
+	private static ArrayList<Line> formatChangedLineList = new ArrayList<Line>();
+
+	public Tracer(boolean analysis) {
+		this.analysis = analysis;
+	}
 
 	public List<BICInfo> collectBILines(Repository repo, List<RevCommit> BFCList, AnnotationGraphModel annotationGraph,
 			RevsWithPath revsWithPath, boolean debug) throws IOException {
@@ -63,24 +69,25 @@ public class Tracer {
 				if (debug) {
 					System.out.println("\nChanged Path : " + path);
 					System.out.println("Graph contains " + path + "? " + annotationGraph.containsKey(path));
-					
 
 					HashMap<RevCommit, ArrayList<Line>> subAG = annotationGraph.get(path);
-					if(subAG != null) {
-						System.out.println("Sub Graph contains " + BFC.getName() + "? " + subAG.containsKey(BFC));	
+					if (subAG != null) {
+						System.out.println("Sub Graph contains " + BFC.getName() + "? " + subAG.containsKey(BFC));
 					}
 				}
 
 				// get subAnnotationGraph
-				HashMap<RevCommit,ArrayList<Line>> subAnnotationGraph = annotationGraph.get(path);
-				
-				// Skip when subAnnotationGraph is null, because building AG could be omitted for some reasons.
-				// For example, building AG is omitted when there are only one path. See AnnotationGraphBuilderThread.java 
-				if(subAnnotationGraph == null) continue;
-				
+				HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = annotationGraph.get(path);
+
+				// Skip when subAnnotationGraph is null, because building AG could be omitted
+				// for some reasons.
+				// For example, building AG is omitted when there are only one path. See
+				// AnnotationGraphBuilderThread.java
+				if (subAnnotationGraph == null)
+					continue;
+
 				// get list of lines of BFC
 				ArrayList<Line> linesToTrace = subAnnotationGraph.get(BFC);
-			
 
 				// get preFixSource and fixSource
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
@@ -111,8 +118,7 @@ public class Tracer {
 						 * 
 						 * [REMARK] This list is sorted in chronological order.
 						 * 
-						 * Latest ------------> Oldest 
-						 * [][][][][][][][][][][][][][][]
+						 * Latest ------------> Oldest [][][][][][][][][][][][][][][]
 						 */
 						List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
 						RevCommit changedPreBugFixRev = changeRevsWithPath.get(changeRevsWithPath.indexOf(BFC) + 1);
@@ -153,7 +159,12 @@ public class Tracer {
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
 							Line line = linesToTrace.get(i);
-							trace(line);
+							
+							if(analysis) {
+								traceWithAnalysis(line, BFC.getName());
+							} else {
+								trace(line);
+							}
 						}
 					}
 
@@ -173,17 +184,41 @@ public class Tracer {
 
 		return bicList;
 	}
-
 	public void trace(Line line) {
-
 		for (Line ancestor : line.getAncestors()) {
-			// Lines that are not white space, format change, and within hunk are BI Lines.
+			// Lines that are not white space, not format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
 				if (ancestor.isFormatChange() || !ancestor.isWithinHunk()) {
 					trace(ancestor);
 				} else {
 					BILines.add(ancestor);
 				}
+			}
+		}
+	}
+
+	public void traceWithAnalysis(Line line, String BFC) {
+		for (Line ancestor : line.getAncestors()) {
+			// Lines that are not white space, not format change, and within hunk are BI Lines.
+			if (!Utils.isWhitespace(ancestor.getContent())) {
+				if(ancestor.isFormatChange()) {
+					if (!formatChangedLineList.contains(line)) {
+						System.out.println("BFC : " +  BFC);
+						System.out.println("Format Change Path : " + line.getPath());
+						System.out.println("Format Change Revision : " + line.getRev());
+						System.out.println("Format Change Content : " + line.getContent() + "\n");
+
+						formatChangedLineList.add(line);
+					}
+					
+					traceWithAnalysis(ancestor, BFC);
+					
+				} else if(!ancestor.isWithinHunk()) {
+					
+					traceWithAnalysis(ancestor, BFC);					
+				} else {
+					BILines.add(ancestor);
+				}	
 			}
 		}
 	}

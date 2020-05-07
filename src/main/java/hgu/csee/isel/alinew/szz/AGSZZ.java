@@ -26,12 +26,14 @@ public class AGSZZ {
 	private String GIT_URL;
 	private String issueKeyFilePath;
 	private boolean debug;
+	private boolean analysis;
 	private File localPath;
 
-	public AGSZZ(String gIT_URL, String issueKeyFilePath, boolean debug) {
+	public AGSZZ(String gIT_URL, String issueKeyFilePath, boolean debug, boolean analysis) {
 		GIT_URL = gIT_URL;
 		this.issueKeyFilePath = issueKeyFilePath;
 		this.debug = debug;
+		this.analysis = analysis;
 	}
 
 	public void run() throws IOException {
@@ -79,7 +81,7 @@ public class AGSZZ {
 			// Phase 2 : Trace and collect BIC candidates and filter out format changes, comments, etc among candidates
 			final long startTracingTime = System.currentTimeMillis();
 			
-			Tracer tracer = new Tracer();
+			Tracer tracer = new Tracer(analysis);
 			List<BICInfo> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath, debug);
 			
 			final long endTracingTime = System.currentTimeMillis();

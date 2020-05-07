@@ -17,6 +17,7 @@ public class AGSZZRunner {
 	private String GIT_URL;
 	private String issueKeyFilePath;
 	private boolean debug;
+	private boolean analysis;
 	private boolean help;
 
 	public static void main(String[] args) {
@@ -52,6 +53,11 @@ public class AGSZZRunner {
 								.longOpt("debug")
 								.desc("Debug Mode")
 								.build());
+		
+		options.addOption(Option.builder("a")
+								.longOpt("analysis")
+								.desc("Analysis Mode")
+								.build());
 
 		options.addOption(Option.builder("h")
 								.longOpt("help")
@@ -73,6 +79,7 @@ public class AGSZZRunner {
 			GIT_URL = cmd.getOptionValue('u');
 			issueKeyFilePath = cmd.getOptionValue('b');
 			debug = cmd.hasOption('d');
+			analysis = cmd.hasOption('a');
 			help = cmd.hasOption('h');
 
 		} catch (ParseException e) {
@@ -107,8 +114,9 @@ public class AGSZZRunner {
 			System.out.println("\tGIT URL : " + GIT_URL);
 			System.out.println("\tIssue Key File path : " + issueKeyFilePath);
 			System.out.println("\tDebug mode : " + debug);
+			System.out.println("\tAnalysis mode : " + analysis);
 			
-			AGSZZ agSZZ = new AGSZZ(GIT_URL, issueKeyFilePath, debug);
+			AGSZZ agSZZ = new AGSZZ(GIT_URL, issueKeyFilePath, debug, analysis);
 			agSZZ.run();
 
 		}

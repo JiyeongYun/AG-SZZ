@@ -209,10 +209,8 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							}
 
 							// check whether format change happens
-							String mergedParentContent = Utils.mergeLineList(
-									parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
-							String mergedChildContent = Utils
-									.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
+							String mergedParentContent = Utils.mergeLineList(parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
+							String mergedChildContent = Utils.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
 
 							if (mergedParentContent.equals(mergedChildContent))
 								childLine.setFormatChange(true);
