@@ -2,6 +2,7 @@ package hgu.csee.isel.alinew.szz.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -181,16 +182,16 @@ public class GitUtils {
 		return commits;
 	}
 
-	public static List<RevCommit> getBFCList(List<String> issueKeys, List<RevCommit> revs) {
-		List<RevCommit> BFCList = new ArrayList<RevCommit>();
+	public static ArrayList<RevCommit> getBFCList(List<String> issueKeys, List<RevCommit> revs) {
+		// To avoid duplicate BFCs
+		HashSet<RevCommit> BFCSet = new HashSet<RevCommit>();
 
 		for (String issueKey : issueKeys) {
 			for (RevCommit rev : revs) 
-				if (rev.getFullMessage().contains(issueKey)) BFCList.add(rev); 
-
+				if (rev.getFullMessage().contains(issueKey)) BFCSet.add(rev); 
 		}
 
-		return BFCList;
+		return new ArrayList<RevCommit>(BFCSet);
 	}
 
 	public static List<String> getTargetPaths(Repository repo, List<RevCommit> BFCList) throws IOException {

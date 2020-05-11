@@ -167,9 +167,8 @@ public class Tracer {
 							}
 						}
 					}
-
-				}
-
+				} 
+				
 				String fixSha1 = BFC.name() + "";
 				String fixDate = Utils.getStringDateTimeFromCommitTime(BFC);
 
@@ -177,10 +176,10 @@ public class Tracer {
 					BICInfo bicInfo = new BICInfo(fixSha1, path, fixDate, line);
 					bicList.add(bicInfo);
 				}
-
+				
 				BILines.clear();
-			}
-		}
+			} 
+		} 
 
 		return bicList;
 	}

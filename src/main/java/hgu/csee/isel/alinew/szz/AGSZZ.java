@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class AGSZZ {
 			List<String> issueKeys = Files.readAllLines(Paths.get(issueKeyFilePath), StandardCharsets.UTF_8);
 			
 			// Colleting BFCs
-			List<RevCommit> bfcList = GitUtils.getBFCList(issueKeys, revs);
+			ArrayList<RevCommit> bfcList = GitUtils.getBFCList(issueKeys, revs);
 			
 			// Pre-step for building annotation graph
 			List<String> targetPaths = GitUtils.getTargetPaths(repo, bfcList);
