@@ -159,10 +159,6 @@ public class Tracer {
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
 							Line line = linesToTrace.get(i);
-//							if(line.getAncestors().size() == 0) {
-//								BILines.add(line);
-//								continue;
-//							}
 							if(analysis) {
 								traceWithAnalysis(line, BFC.getName());
 							} else {
