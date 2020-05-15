@@ -10,13 +10,14 @@ public class Line {
 	private LineType lineType;
 	private List<Line> ancestors;
 	private boolean isFormatChange;
+	private boolean isInitialCommit;
 	private boolean isWithinHunk;
 	private String commiter;
 	private String author;
 	private String commitDate;
 
 	public Line(String path, String rev, String content, int idx, LineType lineType, List<Line> ancestors,
-			boolean isFormatChange, boolean isWithinHunk, String commiter, String author, String commitDate) {
+			boolean isFormatChange,boolean isWithinHunk, String commiter, String author, String commitDate) {
 		super();
 		this.path = path;
 		this.rev = rev;

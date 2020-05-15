@@ -159,7 +159,10 @@ public class Tracer {
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
 							Line line = linesToTrace.get(i);
-							
+//							if(line.getAncestors().size() == 0) {
+//								BILines.add(line);
+//								continue;
+//							}
 							if(analysis) {
 								traceWithAnalysis(line, BFC.getName());
 							} else {
@@ -184,6 +187,13 @@ public class Tracer {
 		return bicList;
 	}
 	public void trace(Line line) {
+		
+		if(line.getAncestors().size() == 0) {
+			if (!Utils.isWhitespace(line.getContent()) && line.isWithinHunk()) {
+				BILines.add(line);
+			}
+		}
+		
 		for (Line ancestor : line.getAncestors()) {
 			// Lines that are not white space, not format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
@@ -194,8 +204,11 @@ public class Tracer {
 				}
 			}
 		}
+		
 	}
 
+	
+	
 	public void traceWithAnalysis(Line line, String BFC) {
 		for (Line ancestor : line.getAncestors()) {
 			// Lines that are not white space, not format change, and within hunk are BI Lines.

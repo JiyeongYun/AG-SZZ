@@ -91,7 +91,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					break;
 
 				RevCommit parentRev = revs.get(revs.indexOf(childRev) + 1);
-
+				
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
 				String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path)).trim();
 
@@ -100,6 +100,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					System.out.println("\tparent rev : " + parentRev.getName());
 					System.out.println("\tchild rev : " + childRev.getName());
 				}
+				
 
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
