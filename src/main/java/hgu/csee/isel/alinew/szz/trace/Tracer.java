@@ -159,15 +159,15 @@ public class Tracer {
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
 							Line line = linesToTrace.get(i);
-							if(analysis) {
+							if (analysis) {
 								traceWithAnalysis(line, BFC.getName());
 							} else {
 								trace(line);
 							}
 						}
 					}
-				} 
-				
+				}
+
 				String fixSha1 = BFC.name() + "";
 				String fixDate = Utils.getStringDateTimeFromCommitTime(BFC);
 
@@ -175,23 +175,25 @@ public class Tracer {
 					BICInfo bicInfo = new BICInfo(fixSha1, path, fixDate, line);
 					bicList.add(bicInfo);
 				}
-				
+
 				BILines.clear();
-			} 
-		} 
+			}
+		}
 
 		return bicList;
 	}
+
 	public void trace(Line line) {
-		
-		if(line.getAncestors().size() == 0) {
+
+		if (line.getAncestors().size() == 0) {
 			if (!Utils.isWhitespace(line.getContent()) && line.isWithinHunk()) {
 				BILines.add(line);
 			}
 		}
-		
+
 		for (Line ancestor : line.getAncestors()) {
-			// Lines that are not white space, not format change, and within hunk are BI Lines.
+			// Lines that are not white space, not format change, and within hunk are BI
+			// Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
 				if (ancestor.isFormatChange() || !ancestor.isWithinHunk()) {
 					trace(ancestor);
@@ -200,33 +202,32 @@ public class Tracer {
 				}
 			}
 		}
-		
+
 	}
 
-	
-	
 	public void traceWithAnalysis(Line line, String BFC) {
 		for (Line ancestor : line.getAncestors()) {
-			// Lines that are not white space, not format change, and within hunk are BI Lines.
+			// Lines that are not white space, not format change, and within hunk are BI
+			// Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
-				if(ancestor.isFormatChange()) {
+				if (ancestor.isFormatChange()) {
 					if (!formatChangedLineList.contains(line)) {
-						System.out.println("BFC : " +  BFC);
+						System.out.println("BFC : " + BFC);
 						System.out.println("Format Change Path : " + line.getPath());
 						System.out.println("Format Change Revision : " + line.getRev());
 						System.out.println("Format Change Content : " + line.getContent() + "\n");
 
 						formatChangedLineList.add(line);
 					}
-					
+
 					traceWithAnalysis(ancestor, BFC);
-					
-				} else if(!ancestor.isWithinHunk()) {
-					
-					traceWithAnalysis(ancestor, BFC);					
+
+				} else if (!ancestor.isWithinHunk()) {
+
+					traceWithAnalysis(ancestor, BFC);
 				} else {
 					BILines.add(ancestor);
-				}	
+				}
 			}
 		}
 	}

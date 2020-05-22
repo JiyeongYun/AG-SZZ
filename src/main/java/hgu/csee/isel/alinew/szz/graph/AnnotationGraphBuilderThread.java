@@ -38,18 +38,17 @@ public class AnnotationGraphBuilderThread implements Runnable {
 	public void run() {
 		try {
 			partitionedAnnotationGraph = buildPartitionedAnnotationGraph(repo, revsWithPath, debug);
-			
+
 		} catch (IOException | EmptyHunkTypeException e) {
 			e.printStackTrace();
 		} catch (IndexOutOfBoundsException e) {
 			// TODO Logging
-			
-			
+
 		}
 	}
-	
-	private AnnotationGraphModel buildPartitionedAnnotationGraph(Repository repo, RevsWithPath revsWithPath, boolean debug)
-			throws IOException, EmptyHunkTypeException {
+
+	private AnnotationGraphModel buildPartitionedAnnotationGraph(Repository repo, RevsWithPath revsWithPath,
+			boolean debug) throws IOException, EmptyHunkTypeException {
 		// Generate Annotation Graph
 		AnnotationGraphModel partitionedAnnotationGraph = new AnnotationGraphModel();
 
@@ -71,9 +70,10 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			String path = paths.next();
 
 			List<RevCommit> revs = revsWithPath.get(path);
-			
+
 			// Skip building AG when the number of paths is 1 as it's not appropriate
-			if(revs.size() == 1) continue;
+			if (revs.size() == 1)
+				continue;
 
 			// Generate subAnnotationGraph
 			HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = new HashMap<RevCommit, ArrayList<Line>>();
@@ -82,7 +82,8 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			ArrayList<Line> childLineList = new ArrayList<>();
 
 			// Logging
-			System.out.println("\n" + Thread.currentThread().getName() + " In progress (" + pathCnt + " / " + numOfPaths + ")");
+			System.out.println(
+					"\n" + Thread.currentThread().getName() + " In progress (" + pathCnt + " / " + numOfPaths + ")");
 			System.out.println("\tBuilding Annotation Graph of " + path);
 
 			for (RevCommit childRev : revs) {
@@ -91,7 +92,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					break;
 
 				RevCommit parentRev = revs.get(revs.indexOf(childRev) + 1);
-				
+
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
 				String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path)).trim();
 
@@ -100,7 +101,6 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					System.out.println("\tparent rev : " + parentRev.getName());
 					System.out.println("\tchild rev : " + childRev.getName());
 				}
-				
 
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
@@ -210,8 +210,10 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							}
 
 							// check whether format change happens
-							String mergedParentContent = Utils.mergeLineList(parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
-							String mergedChildContent = Utils.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
+							String mergedParentContent = Utils.mergeLineList(
+									parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
+							String mergedChildContent = Utils
+									.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
 
 							if (mergedParentContent.equals(mergedChildContent))
 								childLine.setFormatChange(true);
@@ -306,8 +308,9 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			String committer = rev.getCommitterIdent().getName();
 			String author = rev.getAuthorIdent().getName();
 			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev);
-			
-			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, false, committer, author, StringDateTime);
+
+			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, false,
+					committer, author, StringDateTime);
 
 			lst.add(line);
 		}

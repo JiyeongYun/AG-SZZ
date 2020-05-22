@@ -14,7 +14,7 @@ public class BICInfo implements Comparable<BICInfo> {
 	String BIContent = "";
 	String commiter;
 	String author;
-	
+
 	public BICInfo(String fixSha1, String path, String fixDate, Line line) {
 		super();
 		this.FixSha1 = fixSha1;
@@ -28,7 +28,7 @@ public class BICInfo implements Comparable<BICInfo> {
 		this.commiter = line.getCommiter();
 		this.author = line.getAuthor();
 	}
-	
+
 //	public void setLine(Line line) {
 //		this.BISha1 = line.getRev();
 //		this.biPath = line.getPath();
