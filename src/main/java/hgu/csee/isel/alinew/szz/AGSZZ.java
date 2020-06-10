@@ -41,35 +41,33 @@ public class AGSZZ {
 		try {
 			// Clone
 			final String REMOTE_URI = GIT_URL + ".git";
-			
+
 			// prepare a new folder for the cloned repository
 			localPath = File.createTempFile("TestGitRepository", "");
 			if (!localPath.delete()) {
 				throw new IOException("Could not delete temporary file " + localPath);
 			}
-			
+
 			System.out.println("\nCloning from " + REMOTE_URI + " to " + localPath);
 
-			Git git = Git.cloneRepository()
-						 .setURI(REMOTE_URI)
-						 .setDirectory(localPath)
-						 .call();
+			Git git = Git.cloneRepository().setURI(REMOTE_URI).setDirectory(localPath).call();
 
 			System.out.println("Having repository: " + git.getRepository().getDirectory());
 
 			Repository repo = git.getRepository();
-			
+
 			// Pre-step for collecting BFCs
 			List<RevCommit> revs = GitUtils.getRevs(git);
 			List<String> issueKeys = Files.readAllLines(Paths.get(issueKeyFilePath), StandardCharsets.UTF_8);
-			
+
 			// Colleting BFCs
 			ArrayList<RevCommit> bfcList = GitUtils.getBFCList(issueKeys, revs);
-			
+
 			// Pre-step for building annotation graph
 			List<String> targetPaths = GitUtils.getTargetPaths(repo, bfcList);
-			RevsWithPath revsWithPath = GitUtils.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs), targetPaths);
-			
+			RevsWithPath revsWithPath = GitUtils
+					.collectRevsWithSpecificPath(GitUtils.configurePathRevisionList(repo, revs), targetPaths);
+
 			// Phase 1 : Build the annotation graph
 			final long startBuildingTime = System.currentTimeMillis();
 
@@ -77,20 +75,22 @@ public class AGSZZ {
 			AnnotationGraphModel agm = agb.buildAnnotationGraph(repo, revsWithPath, debug);
 
 			final long endBuildingTime = System.currentTimeMillis();
-			System.out.println("\nBuilding Annotation Graph takes " + (endBuildingTime - startBuildingTime) / 1000.0 + "s\n");
+			System.out.println(
+					"\nBuilding Annotation Graph takes " + (endBuildingTime - startBuildingTime) / 1000.0 + "s\n");
 
-			// Phase 2 : Trace and collect BIC candidates and filter out format changes, comments, etc among candidates
+			// Phase 2 : Trace and collect BIC candidates and filter out format changes,
+			// comments, etc among candidates
 			final long startTracingTime = System.currentTimeMillis();
-			
+
 			Tracer tracer = new Tracer(analysis);
 			List<BICInfo> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath, debug);
-			
+
 			final long endTracingTime = System.currentTimeMillis();
 			System.out.println("\nCollecting BICs takes " + (endTracingTime - startTracingTime) / 1000.0 + "s\n");
-			
+
 			// Sort BICs in the order FixSha1, BISha1, BIContent, biLineIdx
 			Collections.sort(BILines);
-						
+
 			// Phase 3 : store outputs
 			Utils.storeOutputFile(GIT_URL, BILines);
 

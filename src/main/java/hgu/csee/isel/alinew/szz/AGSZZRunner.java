@@ -23,9 +23,9 @@ public class AGSZZRunner {
 	public static void main(String[] args) {
 		AGSZZRunner agSZZRunner = new AGSZZRunner();
 		try {
-			
+
 			agSZZRunner.run(args);
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -35,34 +35,17 @@ public class AGSZZRunner {
 	private Options createOptions() {
 		Options options = new Options();
 
-		options.addOption(Option.builder("u")
-								.longOpt("url")
-								.desc("Git URL (ex. https://github.com/SukJinKim/AG-SZZ)")
-								.hasArg()
-								.required(true)
-								.build());
+		options.addOption(Option.builder("u").longOpt("url").desc("Git URL (ex. https://github.com/SukJinKim/AG-SZZ)")
+				.hasArg().required(true).build());
 
-		options.addOption(Option.builder("b")
-								.longOpt("bugFix")
-								.desc("Path of file that has bug fix issue keys")
-								.hasArg()
-								.required(true)
-								.build());
+		options.addOption(Option.builder("b").longOpt("bugFix").desc("Path of file that has bug fix issue keys")
+				.hasArg().required(true).build());
 
-		options.addOption(Option.builder("d")
-								.longOpt("debug")
-								.desc("Debug Mode")
-								.build());
-		
-		options.addOption(Option.builder("a")
-								.longOpt("analysis")
-								.desc("Analysis Mode")
-								.build());
+		options.addOption(Option.builder("d").longOpt("debug").desc("Debug Mode").build());
 
-		options.addOption(Option.builder("h")
-								.longOpt("help")
-								.desc("Help")
-								.build());
+		options.addOption(Option.builder("a").longOpt("analysis").desc("Analysis Mode").build());
+
+		options.addOption(Option.builder("h").longOpt("help").desc("Help").build());
 
 		return options;
 	}
@@ -115,7 +98,7 @@ public class AGSZZRunner {
 			System.out.println("\tIssue Key File path : " + issueKeyFilePath);
 			System.out.println("\tDebug mode : " + debug);
 			System.out.println("\tAnalysis mode : " + analysis);
-			
+
 			AGSZZ agSZZ = new AGSZZ(GIT_URL, issueKeyFilePath, debug, analysis);
 			agSZZ.run();
 

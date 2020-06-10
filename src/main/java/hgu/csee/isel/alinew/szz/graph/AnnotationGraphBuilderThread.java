@@ -38,16 +38,16 @@ public class AnnotationGraphBuilderThread implements Runnable {
 	public void run() {
 		try {
 			partitionedAnnotationGraph = buildPartitionedAnnotationGraph(repo, revsWithPath, debug);
-			
+
 		} catch (IOException | EmptyHunkTypeException e) {
 			e.printStackTrace();
 		} catch (IndexOutOfBoundsException e) {
 			// TODO Logging
-			
-			
+
+
 		}
 	}
-	
+
 	private AnnotationGraphModel buildPartitionedAnnotationGraph(Repository repo, RevsWithPath revsWithPath, boolean debug)
 			throws IOException, EmptyHunkTypeException {
 		// Generate Annotation Graph
@@ -69,9 +69,9 @@ public class AnnotationGraphBuilderThread implements Runnable {
 		while (paths.hasNext()) {
 
 			String path = paths.next();
-			
+
 			List<RevCommit> revs = revsWithPath.get(path);
-			
+
 			// Skip building AG when the number of paths is 1 as it's not appropriate
 			if(revs.size() == 1) continue;
 
@@ -91,7 +91,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					break;
 
 				RevCommit parentRev = revs.get(revs.indexOf(childRev) + 1);
-				
+
 				String parentContent = Utils.removeComments(GitUtils.fetchBlob(repo, parentRev, path)).trim();
 				String childContent = Utils.removeComments(GitUtils.fetchBlob(repo, childRev, path)).trim();
 
@@ -100,7 +100,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					System.out.println("\tparent rev : " + parentRev.getName());
 					System.out.println("\tchild rev : " + childRev.getName());
 				}
-				
+
 
 				// get the parent line list from content
 				configureLineList(parentLineList, path, parentRev, parentContent);
@@ -306,7 +306,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			String committer = rev.getCommitterIdent().getName();
 			String author = rev.getAuthorIdent().getName();
 			String StringDateTime = Utils.getStringDateTimeFromCommitTime(rev);
-			
+
 			Line line = new Line(path, rev.getName(), contentArr[i], i, LineType.CONTEXT, ancestors, false, false, committer, author, StringDateTime);
 
 			lst.add(line);

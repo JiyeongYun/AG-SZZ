@@ -111,7 +111,7 @@ public class GitUtils {
 				revsWithPath.put(path, lst);
 			}
 		}
-		
+
 		return revsWithPath;
 	}
 
@@ -185,8 +185,9 @@ public class GitUtils {
 		HashSet<RevCommit> BFCSet = new HashSet<RevCommit>();
 
 		for (String issueKey : issueKeys) {
-			for (RevCommit rev : revs) 
-				if (rev.getFullMessage().contains(issueKey)) BFCSet.add(rev); 
+			for (RevCommit rev : revs)
+				if (rev.getFullMessage().contains(issueKey))
+					BFCSet.add(rev);
 		}
 		
 		return new ArrayList<RevCommit>(BFCSet);
@@ -209,7 +210,7 @@ public class GitUtils {
 			// get changed paths
 			for (DiffEntry diff : diffs) {
 				String path = diff.getNewPath();
-				
+
 				// contains only files which are java files and not test files
 				if (path.endsWith(".java") && !path.contains("test")) {
 					targetPaths.add(path);
