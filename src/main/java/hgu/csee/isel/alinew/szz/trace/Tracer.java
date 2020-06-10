@@ -26,6 +26,8 @@ public class Tracer {
 	private List<BICInfo> bicList = new ArrayList<>();
 	private static ArrayList<Line> formatChangedLineList = new ArrayList<Line>();
 
+	static boolean flag = false;
+	
 	public Tracer(boolean analysis) {
 		this.analysis = analysis;
 	}
@@ -65,8 +67,14 @@ public class Tracer {
 				// Ignore non-java file and test file
 				if (!path.endsWith(".java") || path.contains("test"))
 					continue;
+				
+				// For Debugging
+				flag = (path.equals("zeppelin-server/src/main/java/org/apache/zeppelin/server/ZeppelinServer.java"));
 
-				if (debug) {
+				if (debug || flag) {
+					System.out.println("\nParent Revision : " + parentRev.getName());
+					System.out.println("Child Revision (BFC) : " + BFC.getName());
+					
 					System.out.println("\nChanged Path : " + path);
 					System.out.println("Graph contains " + path + "? " + annotationGraph.containsKey(path));
 
@@ -99,7 +107,7 @@ public class Tracer {
 					int begin = -1;
 					int end = -1;
 
-					if (debug) {
+					if (debug || flag) {
 						System.out.println("\nHunk Info");
 						System.out.println("\tType : " + edit.getType());
 						System.out.println("\tbA : " + edit.getBeginA());
@@ -118,7 +126,8 @@ public class Tracer {
 						 * 
 						 * [REMARK] This list is sorted in chronological order.
 						 * 
-						 * Latest ------------> Oldest [][][][][][][][][][][][][][][]
+						 * Latest ------------> Oldest 
+						 * [][][][][][][][][][][][][][][]
 						 */
 						List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
 						RevCommit changedPreBugFixRev = changeRevsWithPath.get(changeRevsWithPath.indexOf(BFC) + 1);
@@ -138,7 +147,7 @@ public class Tracer {
 						break;
 					}
 
-					if (debug) {
+					if (debug || flag) {
 						System.out.println("\nTraced Line Info : " + begin);
 						System.out.println("Begin : " + begin);
 						System.out.println("End : " + end);
@@ -183,9 +192,12 @@ public class Tracer {
 		return bicList;
 	}
 	public void trace(Line line) {
-		
 		if(line.getAncestors().size() == 0) {
-			if (!Utils.isWhitespace(line.getContent()) && line.isWithinHunk()) {
+			if (!Utils.isWhitespace(line.getContent())) {
+				if(flag) {
+					System.out.println(String.format("Add line into BIC (Commit : %s, Line Idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n"
+										, line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk()));	
+				}
 				BILines.add(line);
 			}
 		}
@@ -194,16 +206,24 @@ public class Tracer {
 			// Lines that are not white space, not format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
 				if (ancestor.isFormatChange() || !ancestor.isWithinHunk()) {
+					// parent, child 표시
+					if(flag) {
+						System.out.println(String.format("From commit : %s, Lind idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n=> To commit : %s, Lind idx : %s, content : %s, type : %s, cometic? : %s, in hunk? : %s", 
+											line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk(),ancestor.getRev(), ancestor.getIdx(), ancestor.getContent(), ancestor.getLineType(), ancestor.isFormatChange(), ancestor.isWithinHunk()));
+						
+					}
 					trace(ancestor);
 				} else {
+					if(flag) {
+						System.out.println(String.format("From commit : %s, Lind idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n=>Add line into BIC (Commit : %s, Line Idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n",
+								line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk(),ancestor.getRev(), ancestor.getIdx(), ancestor.getContent(), ancestor.getLineType(), ancestor.isFormatChange(), ancestor.isWithinHunk()));	
+					}
 					BILines.add(ancestor);
 				}
 			}
 		}
 		
 	}
-
-	
 	
 	public void traceWithAnalysis(Line line, String BFC) {
 		for (Line ancestor : line.getAncestors()) {
@@ -211,10 +231,11 @@ public class Tracer {
 			if (!Utils.isWhitespace(ancestor.getContent())) {
 				if(ancestor.isFormatChange()) {
 					if (!formatChangedLineList.contains(line)) {
-						System.out.println("BFC : " +  BFC);
-						System.out.println("Format Change Path : " + line.getPath());
-						System.out.println("Format Change Revision : " + line.getRev());
-						System.out.println("Format Change Content : " + line.getContent() + "\n");
+						System.out.println(String.join(",", BFC, line.getRev(), line.getPath(), line.getContent().strip()));
+//						System.out.println("BFC : " +  BFC);
+//						System.out.println("Format Change Path : " + line.getPath());
+//						System.out.println("Format Change Revision : " + line.getRev());
+//						System.out.println("Format Change Content : " + line.getContent() + "\n");
 
 						formatChangedLineList.add(line);
 					}

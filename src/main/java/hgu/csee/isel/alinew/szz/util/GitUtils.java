@@ -3,9 +3,7 @@ package hgu.csee.isel.alinew.szz.util;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -37,8 +35,8 @@ import hgu.csee.isel.alinew.szz.model.RevsWithPath;
 public class GitUtils {
 
 	public static DiffAlgorithm diffAlgorithm = DiffAlgorithm.getAlgorithm(DiffAlgorithm.SupportedAlgorithm.MYERS);
-	public static RawTextComparator diffComparator = RawTextComparator.DEFAULT;
-
+	public static RawTextComparator diffComparator = RawTextComparator.WS_IGNORE_ALL;
+	
 	public static EditList getEditListFromDiff(String file1, String file2) {
 		RawText rt1 = new RawText(file1.getBytes());
 		RawText rt2 = new RawText(file2.getBytes());
@@ -190,7 +188,7 @@ public class GitUtils {
 			for (RevCommit rev : revs) 
 				if (rev.getFullMessage().contains(issueKey)) BFCSet.add(rev); 
 		}
-
+		
 		return new ArrayList<RevCommit>(BFCSet);
 	}
 

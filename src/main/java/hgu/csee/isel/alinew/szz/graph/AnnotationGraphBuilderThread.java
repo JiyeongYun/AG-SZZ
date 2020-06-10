@@ -69,7 +69,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 		while (paths.hasNext()) {
 
 			String path = paths.next();
-
+			
 			List<RevCommit> revs = revsWithPath.get(path);
 			
 			// Skip building AG when the number of paths is 1 as it's not appropriate
@@ -245,7 +245,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							offset += hunk.getRangeOfParent();
 
 							childLine.setLineType(LineType.CONTEXT);
-							childLine.setWithinHunk(true);
+//							childLine.setWithinHunk(true);
 							mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
 
 							hunkIdx++;
