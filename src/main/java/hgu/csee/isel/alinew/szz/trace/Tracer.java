@@ -69,7 +69,7 @@ public class Tracer {
 					continue;
 
 				// For Debugging
-				flag = (path.equals("zeppelin-server/src/main/java/org/apache/zeppelin/server/ZeppelinServer.java"));
+//				flag = (path.equals("zeppelin-zengine/src/main/java/org/apache/zeppelin/interpreter/InterpreterSetting.java"));
 
 				if (debug || flag) {
 					System.out.println("\nParent Revision : " + parentRev.getName());
@@ -192,6 +192,8 @@ public class Tracer {
 		return bicList;
 	}
 	public void trace(Line line) {
+		// The fact that there are no ancestors means that the type of this line is INSERT
+		// However, due to the limit of building AG algorithm, the type of line can be CONTEXT if the line is initially inserted in commit history.
 		if(line.getAncestors().size() == 0) {
 			if (!Utils.isWhitespace(line.getContent())) {
 				if(flag) {

@@ -69,6 +69,9 @@ public class AnnotationGraphBuilderThread implements Runnable {
 		while (paths.hasNext()) {
 
 			String path = paths.next();
+			
+			// For Debugging
+			debug = path.equals("zeppelin-zengine/src/main/java/org/apache/zeppelin/interpreter/InterpreterSetting.java");
 
 			List<RevCommit> revs = revsWithPath.get(path);
 
@@ -201,8 +204,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 								System.out.println("REPLACE\n");
 							}
 
-							// When childIdx is the last index in hunk, update offset and increment hunk
-							// index
+							// When childIdx is the last index in hunk, update offset and increment hunk index
 							if (childIdx == endOfChild - 1) {
 								offset += (hunk.getRangeOfParent() - hunk.getRangeOfChild());
 
@@ -224,8 +226,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 
 						case "DELETE":
 							// If the last child line is in DELETE, it maps with nothing
-							if (childIdx == childLineList.size() - 1)
-								break;
+							if (childIdx == childLineList.size() - 1) break;
 
 							// If the begin of child belongs to both DELETE and INSERT
 							if (belongsToBothDELETEAndINSERT(hunkList, hunkIdx, beginOfChild)) {
@@ -241,6 +242,24 @@ public class AnnotationGraphBuilderThread implements Runnable {
 
 								break;
 							}
+							
+							// If the begin of child belongs to both DELETE and REPLACE
+//							if (belongsToBothDELETEAndREPLACE(hunkList, hunkIdx, beginOfChild)) {
+//								// TODO implement setting offset
+//								
+//								
+//								childLine.setLineType(LineType.REPLACE);
+//								childLine.setWithinHunk(true);
+//								mapChildLineWithAncestors(hunk, parentLineList, childLine);
+//								
+//								hunkIdx++;
+//								
+//								if (debug) {
+//									System.out.println("REPLACE\n");
+//								}
+//
+//								break;
+//							}
 
 							offset += hunk.getRangeOfParent();
 
@@ -294,6 +313,21 @@ public class AnnotationGraphBuilderThread implements Runnable {
 			}
 		}
 
+		return false;
+	}
+	
+	private boolean belongsToBothDELETEAndREPLACE(ArrayList<Hunk> hunkList, int currHunkIdx, int currBeginOfChild) {
+		int nextHunkIdx = currHunkIdx + 1;
+
+		if (nextHunkIdx < hunkList.size()) {
+			String nextHunkType = hunkList.get(nextHunkIdx).getHunkType();
+			int nextBeginOfChild = hunkList.get(nextHunkIdx).getBeginOfChild();
+
+			if (nextHunkType.equals("REPLACE") && currBeginOfChild == nextBeginOfChild) {
+				return true;
+			}
+		}
+		
 		return false;
 	}
 
