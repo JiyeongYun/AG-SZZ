@@ -1,9 +1,6 @@
 package hgu.csee.isel.alinew.szz;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -35,17 +32,34 @@ public class AGSZZRunner {
 	private Options createOptions() {
 		Options options = new Options();
 
-		options.addOption(Option.builder("u").longOpt("url").desc("Git URL (ex. https://github.com/SukJinKim/AG-SZZ)")
-				.hasArg().required(true).build());
+		options.addOption(Option.builder("u")
+								.longOpt("url")
+								.desc("Git URL (ex. https://github.com/SukJinKim/AG-SZZ)")
+								.hasArg()
+								.required(true)
+								.build());
 
-		options.addOption(Option.builder("b").longOpt("bugFix").desc("Path of file that has bug fix issue keys")
-				.hasArg().required(true).build());
+		options.addOption(Option.builder("b")
+								.longOpt("bugFix")
+								.desc("Path of file that has bug fix issue keys")
+								.hasArg()
+								.required(true)
+								.build());
 
-		options.addOption(Option.builder("d").longOpt("debug").desc("Debug Mode").build());
+		options.addOption(Option.builder("d")
+								.longOpt("debug")
+								.desc("Debug Mode")
+								.build());
 
-		options.addOption(Option.builder("a").longOpt("analysis").desc("Analysis Mode").build());
+		options.addOption(Option.builder("a")
+								.longOpt("analysis")
+								.desc("Analysis Mode")
+								.build());
 
-		options.addOption(Option.builder("h").longOpt("help").desc("Help").build());
+		options.addOption(Option.builder("h")
+								.longOpt("help")
+								.desc("Help")
+								.build());
 
 		return options;
 	}

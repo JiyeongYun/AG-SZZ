@@ -75,15 +75,13 @@ public class AGSZZ {
 			AnnotationGraphModel agm = agb.buildAnnotationGraph(repo, revsWithPath, debug);
 
 			final long endBuildingTime = System.currentTimeMillis();
-			System.out.println(
-					"\nBuilding Annotation Graph takes " + (endBuildingTime - startBuildingTime) / 1000.0 + "s\n");
+			System.out.println("\nBuilding Annotation Graph takes " + (endBuildingTime - startBuildingTime) / 1000.0 + "s\n");
 
-			// Phase 2 : Trace and collect BIC candidates and filter out format changes,
-			// comments, etc among candidates
+			// Phase 2 : Trace and collect BIC candidates and filter out format changes, comments, etc among candidates
 			final long startTracingTime = System.currentTimeMillis();
 
-			Tracer tracer = new Tracer(analysis);
-			List<BICInfo> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath, debug);
+			Tracer tracer = new Tracer(analysis,debug);
+			List<BICInfo> BILines = tracer.collectBILines(repo, bfcList, agm, revsWithPath);
 
 			final long endTracingTime = System.currentTimeMillis();
 			System.out.println("\nCollecting BICs takes " + (endTracingTime - startTracingTime) / 1000.0 + "s\n");

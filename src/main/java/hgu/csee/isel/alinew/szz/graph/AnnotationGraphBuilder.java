@@ -50,7 +50,7 @@ public class AnnotationGraphBuilder {
 		executor.shutdown(); // no new tasks will be accepted.
 
 		while (!executor.isTerminated()) {
-
+			
 		}
 
 		AnnotationGraphModel annotationGraph = new AnnotationGraphModel();

@@ -21,19 +21,19 @@ import hgu.csee.isel.alinew.szz.data.BICInfo;
 
 public class Tracer {
 	private boolean analysis;
+	private boolean debug;
 	private static final int REFACTOIRNG_THRESHOLD = 10;
 	private HashSet<Line> BILines = new HashSet<>();
 	private List<BICInfo> bicList = new ArrayList<>();
 	private static ArrayList<Line> formatChangedLineList = new ArrayList<Line>();
 
-	static boolean flag = false;
-
-	public Tracer(boolean analysis) {
+	public Tracer(boolean analysis, boolean debug) {
 		this.analysis = analysis;
+		this.debug = debug;
 	}
 
 	public List<BICInfo> collectBILines(Repository repo, List<RevCommit> BFCList, AnnotationGraphModel annotationGraph,
-			RevsWithPath revsWithPath, boolean debug) throws IOException {
+			RevsWithPath revsWithPath) throws IOException {
 
 		// Phase 1 : Find path and line index for tracing
 		for (RevCommit BFC : BFCList) {
@@ -68,10 +68,7 @@ public class Tracer {
 				if (!path.endsWith(".java") || path.contains("test"))
 					continue;
 
-				// For Debugging
-//				flag = (path.equals("zeppelin-zengine/src/main/java/org/apache/zeppelin/interpreter/InterpreterSetting.java"));
-
-				if (debug || flag) {
+				if (debug) {
 					System.out.println("\nParent Revision : " + parentRev.getName());
 					System.out.println("Child Revision (BFC) : " + BFC.getName());
 
@@ -87,11 +84,9 @@ public class Tracer {
 				// get subAnnotationGraph
 				HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = annotationGraph.get(path);
 
-				// Skip when subAnnotationGraph is null, because building AG could be omitted
-				// for some reasons.
-				// For example, building AG is omitted when there are only one path. See
-				// AnnotationGraphBuilderThread.java
-				if (subAnnotationGraph == null)
+				// Skip when subAnnotationGraph is null, because building AG could be omitted for some reasons.
+				// For example, building AG is omitted when there are only one path. See AnnotationGraphBuilderThread.java
+				if (subAnnotationGraph == null) 
 					continue;
 
 				// get list of lines of BFC
@@ -107,7 +102,7 @@ public class Tracer {
 					int begin = -1;
 					int end = -1;
 
-					if (debug || flag) {
+					if (debug) {
 						System.out.println("\nHunk Info");
 						System.out.println("\tType : " + edit.getType());
 						System.out.println("\tbA : " + edit.getBeginA());
@@ -126,7 +121,7 @@ public class Tracer {
 						 *
 						 * [REMARK] This list is sorted in chronological order.
 						 *
-						 * Latest ------------> Oldest
+						 * Latest ------------> Oldest 
 						 * [][][][][][][][][][][][][][][]
 						 */
 						List<RevCommit> changeRevsWithPath = revsWithPath.get(path);
@@ -147,7 +142,7 @@ public class Tracer {
 						break;
 					}
 
-					if (debug || flag) {
+					if (debug) {
 						System.out.println("\nTraced Line Info : " + begin);
 						System.out.println("Begin : " + begin);
 						System.out.println("End : " + end);
@@ -155,8 +150,8 @@ public class Tracer {
 						System.out.println("\nSize of lines to trace : " + linesToTrace.size());
 
 						for (Line line : linesToTrace) {
-
 							int lindIdx = line.getIdx();
+							
 							if (lindIdx >= begin && lindIdx < end) {
 								System.out.println("\nLine Idx : " + line.getIdx());
 								System.out.println("Content : " + line.getContent());
@@ -168,7 +163,7 @@ public class Tracer {
 					if (0 <= begin && 0 <= end) {
 						for (int i = begin; i < end; i++) {
 							Line line = linesToTrace.get(i);
-							if(analysis) {
+							if (analysis) {
 								traceWithAnalysis(line, BFC.getName());
 							} else {
 								trace(line);
@@ -191,15 +186,18 @@ public class Tracer {
 
 		return bicList;
 	}
+
 	public void trace(Line line) {
 		// The fact that there are no ancestors means that the type of this line is INSERT
 		// However, due to the limit of building AG algorithm, the type of line can be CONTEXT if the line is initially inserted in commit history.
-		if(line.getAncestors().size() == 0) {
+		if (line.getAncestors().size() == 0) {
 			if (!Utils.isWhitespace(line.getContent())) {
-				if(flag) {
-					System.out.println(String.format("Add line into BIC (Commit : %s, Line Idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n"
-										, line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk()));
+				if (debug) {
+					System.out.println(String.format(
+							"Add line into BIC (Commit : %s, Line Idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n",
+							line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk()));
 				}
+				
 				BILines.add(line);
 			}
 		}
@@ -208,43 +206,40 @@ public class Tracer {
 			// Lines that are not white space, not format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
 				if (ancestor.isFormatChange() || !ancestor.isWithinHunk()) {
-					// parent, child 표시
-					if(flag) {
-						System.out.println(String.format("From commit : %s, Lind idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n=> To commit : %s, Lind idx : %s, content : %s, type : %s, cometic? : %s, in hunk? : %s",
-											line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk(),ancestor.getRev(), ancestor.getIdx(), ancestor.getContent(), ancestor.getLineType(), ancestor.isFormatChange(), ancestor.isWithinHunk()));
-
+					if (debug) {
+						System.out.println(String.format(
+								"From commit : %s, Lind idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n=> To commit : %s, Lind idx : %s, content : %s, type : %s, cometic? : %s, in hunk? : %s",
+								line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk(), ancestor.getRev(), ancestor.getIdx(), ancestor.getContent(), ancestor.getLineType(), ancestor.isFormatChange(),ancestor.isWithinHunk()));
 					}
+					
 					trace(ancestor);
 				} else {
-					if(flag) {
-						System.out.println(String.format("From commit : %s, Lind idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n=>Add line into BIC (Commit : %s, Line Idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n",
-								line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk(),ancestor.getRev(), ancestor.getIdx(), ancestor.getContent(), ancestor.getLineType(), ancestor.isFormatChange(), ancestor.isWithinHunk()));
+					if (debug) {
+						System.out.println(String.format(
+								"From commit : %s, Lind idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n=>Add line into BIC (Commit : %s, Line Idx : %s, content : %s, type : %s, cosmetic? : %s, in hunk? : %s\n",
+								line.getRev(), line.getIdx(), line.getContent(), line.getLineType(), line.isFormatChange(), line.isWithinHunk(), ancestor.getRev(), ancestor.getIdx(), ancestor.getContent(), ancestor.getLineType(), ancestor.isFormatChange(),ancestor.isWithinHunk()));
 					}
+					
 					BILines.add(ancestor);
 				}
 			}
 		}
-
 	}
 
 	public void traceWithAnalysis(Line line, String BFC) {
 		for (Line ancestor : line.getAncestors()) {
 			// Lines that are not white space, not format change, and within hunk are BI Lines.
 			if (!Utils.isWhitespace(ancestor.getContent())) {
-				if(ancestor.isFormatChange()) {
+				if (ancestor.isFormatChange()) {
 					if (!formatChangedLineList.contains(line)) {
 						System.out.println(String.join(",", BFC, line.getRev(), line.getPath(), line.getContent().strip()));
-//						System.out.println("BFC : " +  BFC);
-//						System.out.println("Format Change Path : " + line.getPath());
-//						System.out.println("Format Change Revision : " + line.getRev());
-//						System.out.println("Format Change Content : " + line.getContent() + "\n");
 
 						formatChangedLineList.add(line);
 					}
 
 					traceWithAnalysis(ancestor, BFC);
 
-				} else if(!ancestor.isWithinHunk()) {
+				} else if (!ancestor.isWithinHunk()) {
 
 					traceWithAnalysis(ancestor, BFC);
 				} else {

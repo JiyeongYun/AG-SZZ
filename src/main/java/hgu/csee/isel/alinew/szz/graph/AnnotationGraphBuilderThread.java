@@ -44,7 +44,6 @@ public class AnnotationGraphBuilderThread implements Runnable {
 		} catch (IndexOutOfBoundsException e) {
 			// TODO Logging
 
-
 		}
 	}
 
@@ -69,14 +68,12 @@ public class AnnotationGraphBuilderThread implements Runnable {
 		while (paths.hasNext()) {
 
 			String path = paths.next();
-			
-			// For Debugging
-			debug = path.equals("zeppelin-zengine/src/main/java/org/apache/zeppelin/interpreter/InterpreterSetting.java");
 
 			List<RevCommit> revs = revsWithPath.get(path);
 
 			// Skip building AG when the number of paths is 1 as it's not appropriate
-			if(revs.size() == 1) continue;
+			if(revs.size() == 1) 
+				continue;
 
 			// Generate subAnnotationGraph
 			HashMap<RevCommit, ArrayList<Line>> subAnnotationGraph = new HashMap<RevCommit, ArrayList<Line>>();
@@ -90,8 +87,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 
 			for (RevCommit childRev : revs) {
 				// Escape from the loop when there is no parent rev anymore
-				if (revs.indexOf(childRev) == revs.size() - 1)
-					break;
+				if (revs.indexOf(childRev) == revs.size() - 1) break;
 
 				RevCommit parentRev = revs.get(revs.indexOf(childRev) + 1);
 
@@ -131,7 +127,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 				offset = 0;
 
 				while (childIdx < childLineList.size()) {
-
+					boolean isIgnorable = false;
 					childLine = childLineList.get(childIdx);
 
 					if (debug) {
@@ -143,8 +139,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					// Case 1 - when there is no hunk anymore
 					if (hunkList.size() <= hunkIdx) {
 						if (debug) {
-							System.out.println("Connected parent index : " + (childIdx + offset) + " / "
-									+ (parentLineList.size() - 1));
+							System.out.println("Connected parent index : " + (childIdx + offset) + " / " + (parentLineList.size() - 1));
 							System.out.println("No Hunk anymore\n");
 						}
 						childLine.setLineType(LineType.CONTEXT);
@@ -171,8 +166,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 					// Case 2 - child index is out of hunk range
 					if (childIdx < beginOfChild) {
 						if (debug) {
-							System.out.println("Connected parent index : " + (childIdx + offset) + " / "
-									+ (parentLineList.size() - 1));
+							System.out.println("Connected parent index : " + (childIdx + offset) + " / " + (parentLineList.size() - 1));
 							System.out.println("Out of Hunk range\n");
 
 						}
@@ -189,7 +183,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							}
 
 							// When childIdx is the last index in hunk, increment hunk index
-							if (childIdx == endOfChild - 1)
+							if (childIdx == endOfChild - 1) 
 								hunkIdx++;
 
 							childLine.setLineType(LineType.INSERT);
@@ -215,7 +209,7 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							String mergedParentContent = Utils.mergeLineList(parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent()));
 							String mergedChildContent = Utils.mergeLineList(childLineList.subList(hunk.getBeginOfChild(), hunk.getEndOfChild()));
 
-							if (mergedParentContent.equals(mergedChildContent))
+							if (mergedParentContent.equals(mergedChildContent)) 
 								childLine.setFormatChange(true);
 
 							childLine.setLineType(LineType.REPLACE);
@@ -226,52 +220,29 @@ public class AnnotationGraphBuilderThread implements Runnable {
 
 						case "DELETE":
 							// If the last child line is in DELETE, it maps with nothing
-							if (childIdx == childLineList.size() - 1) break;
+							if (childIdx == childLineList.size() - 1)
+								break;
+							
+							// If the begin of child belongs to both DELETE and INSERT or both DELETE and REPALCE
+							if (belongsToBothDELETEAndINSERT(hunkList, hunkIdx, beginOfChild) || belongsToBothDELETEAndREPLACE(hunkList, hunkIdx, beginOfChild)) {
+								offset += hunk.getRangeOfParent();
 
-							// If the begin of child belongs to both DELETE and INSERT
-							if (belongsToBothDELETEAndINSERT(hunkList, hunkIdx, beginOfChild)) {
-								offset += hunk.getRangeOfParent() - 1;
-
-								childLine.setLineType(LineType.INSERT);
-								childLine.setWithinHunk(true);
 								hunkIdx++;
-
-								if (debug) {
-									System.out.println("INSERT\n");
-								}
+								
+								isIgnorable = true; // Iteration can be ignored in this situation. 
 
 								break;
 							}
-							
-							// If the begin of child belongs to both DELETE and REPLACE
-//							if (belongsToBothDELETEAndREPLACE(hunkList, hunkIdx, beginOfChild)) {
-//								// TODO implement setting offset
-//								
-//								
-//								childLine.setLineType(LineType.REPLACE);
-//								childLine.setWithinHunk(true);
-//								mapChildLineWithAncestors(hunk, parentLineList, childLine);
-//								
-//								hunkIdx++;
-//								
-//								if (debug) {
-//									System.out.println("REPLACE\n");
-//								}
-//
-//								break;
-//							}
 
 							offset += hunk.getRangeOfParent();
 
 							childLine.setLineType(LineType.CONTEXT);
-//							childLine.setWithinHunk(true);
 							mapChildLineWithAncestor(childIdx, offset, parentLineList, childLine);
 
 							hunkIdx++;
 
 							if (debug) {
-								System.out.println("Connected parent index : " + (childIdx + offset) + " / "
-										+ (parentLineList.size() - 1));
+								System.out.println("Connected parent index : " + (childIdx + offset) + " / " + (parentLineList.size() - 1));
 								System.out.println("DELETE\n");
 							}
 
@@ -281,8 +252,9 @@ public class AnnotationGraphBuilderThread implements Runnable {
 							throw new EmptyHunkTypeException();
 						}
 					}
-
-					childIdx++;
+					if(!isIgnorable) {
+						childIdx++;
+					}
 				}
 
 				// put lists of line corresponding to commit into subAG
@@ -351,9 +323,8 @@ public class AnnotationGraphBuilderThread implements Runnable {
 		ArrayList<Hunk> hunkList = new ArrayList<>();
 
 		for (Edit edit : editList) {
-			Hunk hunk = new Hunk(edit.getType().toString(), edit.getBeginA(), edit.getEndA(), edit.getBeginB(),
-					edit.getEndB());
-
+			Hunk hunk = new Hunk(edit.getType().toString(), edit.getBeginA(), edit.getEndA(), edit.getBeginB(), edit.getEndB());
+			
 			hunkList.add(hunk);
 		}
 
@@ -361,20 +332,17 @@ public class AnnotationGraphBuilderThread implements Runnable {
 	}
 
 	private void mapChildLineWithAncestor(int childIdx, int offset, List<Line> parentLineList, Line childLine) {
-		Line ancestor;
-		List<Line> ancestorsOfChild;
-
-		ancestor = parentLineList.get(childIdx + offset);
-		ancestorsOfChild = childLine.getAncestors();
+		Line ancestor = parentLineList.get(childIdx + offset);
+		List<Line> ancestorsOfChild = childLine.getAncestors();
+		
 		ancestorsOfChild.add(ancestor);
 		childLine.setAncestors(ancestorsOfChild);
 	}
 
 	private void mapChildLineWithAncestors(Hunk hunk, List<Line> parentLineList, Line childLine) {
-
 		List<Line> ancestorsOfChild = parentLineList.subList(hunk.getBeginOfParent(), hunk.getEndOfParent());
+		
 		childLine.setAncestors(ancestorsOfChild);
-
 	}
 
 }
